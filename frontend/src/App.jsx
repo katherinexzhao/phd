@@ -1,9 +1,33 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import SignUpPage from './pages/SignupPage.jsx'
 import UploadOERPage from './pages/UploadOERPage'
+import UploadOERMetaPage from './pages/UploadOERMetaPage'
+import GroupsPage from './pages/GroupsPage'
+import ChatbotPage from './pages/ChatbotPage'
+import CompleteProfilePage from './pages/CompleteProfilePage'
+import Layout from './pages/Layout'
+import InterestSelect from './pages/InterestSelect'
+
+function InterestPageWrapper() {
+  const navigate = useNavigate();
+  const handleSubmit = async (selectedInterests) => {
+    const email = localStorage.getItem('email');
+    try {
+      await fetch('/api/user/interests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, interests: selectedInterests })
+      });
+    } catch (err) {
+      // Optionally handle error
+    }
+    navigate('/home');
+  };
+  return <InterestSelect onSubmit={handleSubmit} />;
+}
 
 function App() {
   return (
@@ -11,8 +35,16 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/upload" element={<UploadOERPage />} />
+        <Route path="/interest" element={<InterestPageWrapper />} />
+        <Route path="/" element={<Layout />}>
+          <Route path="home" element={<HomePage />} />
+          <Route path="chatbot" element={<ChatbotPage />} />
+          <Route path="groups" element={<GroupsPage />} />
+          <Route path="forum" element={<div className='text-2xl'>Forum Page (TODO)</div>} />
+          <Route path="profile" element={<CompleteProfilePage />} />
+          <Route path="upload" element={<UploadOERPage />} />
+          <Route path="upload/meta" element={<UploadOERMetaPage />} />
+        </Route>
       </Routes>
     </Router>
   )

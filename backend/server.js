@@ -23,6 +23,10 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api/auth', require('./routes/auth'))
+app.use('/api/oer', require('./routes/oer'))
+app.use('/api/user', require('./routes/user'))
+app.use('/api/core', require('./routes/core'))
+app.use('/uploads', express.static('uploads'))
 
 const PORT = process.env.PORT || 5001
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`))

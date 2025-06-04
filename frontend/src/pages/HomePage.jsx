@@ -1,40 +1,158 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
 
-export default function HomePage() {
-  const navigate = useNavigate()
+function extractLink(r) {
+  // Priority: fullTextLinks[0].url > openAccessPdf.url > url > downloadUrl > doi
+  if (Array.isArray(r.fullTextLinks) && r.fullTextLinks.length > 0 && r.fullTextLinks[0].url) return r.fullTextLinks[0].url;
+  if (r.openAccessPdf && r.openAccessPdf.url) return r.openAccessPdf.url;
+  if (r.url) return r.url;
+  if (r.downloadUrl) return r.downloadUrl;
+  if (r.doi) return `https://doi.org/${r.doi}`;
+  return null;
+}
+
+function getPagination(current, total) {
+  // Return pagination button array: includes first, previous two, current, next two, last page, with ... in between
+  const pages = [];
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i);
+    return pages;
+  }
+  pages.push(1);
+  if (current > 4) pages.push('...');
+  for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) {
+    pages.push(i);
+  }
+  if (current < total - 3) pages.push('...');
+  pages.push(total);
+  return pages;
+}
+
+function CoreSearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalHits, setTotalHits] = useState(0);
+  const [limit, setLimit] = useState(50);
+
+  const handleSearch = async (e, toPage = 1) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    setError('');
+    setResults([]);
+    try {
+      const res = await fetch(`/api/core/search?query=${encodeURIComponent(query)}&page=${toPage}`);
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        setResults(data.results);
+        setTotalHits(data.totalHits || 0);
+        setLimit(data.limit || 50);
+        setPage(data.page || 1);
+      } else {
+        setError('No results found.');
+        setResults([]);
+        setTotalHits(0);
+      }
+    } catch (err) {
+      setError('Failed to fetch resources.');
+    }
+    setLoading(false);
+  };
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalHits / limit);
+  const pagination = getPagination(page, totalPages);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 text-gray-800">
-      <header className="bg-white shadow p-6">
-        <h1 className="text-4xl font-bold text-center text-indigo-700">Community Learning Hub</h1>
-        <p className="text-center text-gray-600 mt-2">Empowering shared knowledge for all</p>
-      </header>
+    <div className="w-full flex flex-col items-center">
+      <form onSubmit={handleSearch} className="mb-8 flex w-full max-w-2xl">
+        <input
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search Open Education Resources..."
+          className="flex-1 border border-gray-300 rounded-l-2xl px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 shadow"
+        />
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-r-2xl text-lg font-semibold transition-all">Search</button>
+      </form>
+      {loading && <div>Loading...</div>}
+      {error && <div className="text-red-500 mb-2">{error}</div>}
+      <div className="w-full max-w-2xl">
+        <ul>
+          {results.map((r, idx) => {
+            const link = extractLink(r);
+            return (
+              <li key={r.id || r.doi || idx} className="mb-4 p-4 border-b bg-white rounded-xl shadow-sm">
+                {link ? (
+                  <a
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-700 underline font-semibold text-lg"
+                  >
+                    {r.title || r.titleFull || 'Untitled'}
+                  </a>
+                ) : (
+                  <span className="text-gray-400 font-semibold text-lg">
+                    {r.title || r.titleFull || 'Untitled'}
+                  </span>
+                )}
+                <div className="text-gray-600 text-sm mt-1 line-clamp-3">{r.description || r.abstract || ''}</div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      {/* Pagination button optimization */}
+      {totalPages > 1 && (
+        <>
+          <div className="flex flex-wrap gap-2 mt-6 items-center">
+            <button
+              className="px-3 py-2 rounded-lg border font-semibold bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+              onClick={() => handleSearch(null, Math.max(1, page - 1))}
+              disabled={page === 1}
+            >
+              Prev
+            </button>
+            {pagination.map((p, i) =>
+              p === '...'
+                ? <span key={i} className="px-2 text-gray-400">...</span>
+                : <button
+                    key={p}
+                    className={`px-4 py-2 rounded-lg border font-semibold ${page === p ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'}`}
+                    onClick={() => handleSearch(null, p)}
+                    disabled={page === p}
+                  >
+                    {p}
+                  </button>
+            )}
+            <button
+              className="px-3 py-2 rounded-lg border font-semibold bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+              onClick={() => handleSearch(null, Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+            >
+              Next
+            </button>
+          </div>
+          <div className="h-16" />
+        </>
+      )}
+    </div>
+  );
+}
 
-      <nav className="flex flex-wrap justify-center gap-4 bg-white shadow-md p-4 mt-4">
-        <button className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-xl shadow-md">Login</button>
-        <button className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-xl shadow-md">Register</button>
-        <button className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2 rounded-xl shadow-md" onClick={() => navigate('/upload')}>Upload</button>
-        <button className="bg-purple-500 hover:bg-purple-600 text-white px-5 py-2 rounded-xl shadow-md">My Page</button>
-        <button className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-xl shadow-md">Feed</button>
-        <button className="bg-pink-500 hover:bg-pink-600 text-white px-5 py-2 rounded-xl shadow-md">Chatbot</button>
-        <button className="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-xl shadow-md">Forum</button>
-      </nav>
-
-      <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-6 py-12">
-        <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
-          <h2 className="text-2xl font-semibold mb-2 text-indigo-700">Welcome!</h2>
-          <p className="text-gray-600">This is a placeholder for personalized content.</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
-          <h2 className="text-2xl font-semibold mb-2 text-indigo-700">Latest Uploads</h2>
-          <p className="text-gray-600">Content will appear here soon.</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
-          <h2 className="text-2xl font-semibold mb-2 text-indigo-700">Discussion Highlights</h2>
-          <p className="text-gray-600">Forum topics will be shown here.</p>
-        </div>
-      </main>
+export default function HomePage() {
+  const username = typeof window !== 'undefined' ? localStorage.getItem('username') : '';
+  return (
+    <div className="w-full flex flex-col items-center pt-16 min-h-screen bg-white">
+      <div className="w-full max-w-2xl flex flex-col items-center mb-8">
+        <span className="text-3xl sm:text-4xl font-extrabold text-blue-800 mb-4 tracking-tight drop-shadow">{username ? `Welcome, ${username}!` : 'Welcome!'}</span>
+      </div>
+      <div className="w-full max-w-2xl flex flex-col items-center">
+        <h2 className="text-2xl font-bold mb-6">Search Open Education Resources</h2>
+        <CoreSearch />
+      </div>
     </div>
   );
 }
