@@ -10,6 +10,7 @@ import ChatbotPage from './pages/ChatbotPage'
 import CompleteProfilePage from './pages/CompleteProfilePage'
 import Layout from './pages/Layout'
 import InterestSelect from './pages/InterestSelect'
+import PersonalizedPlan from './pages/PersonalizedPlan';
 
 function InterestPageWrapper() {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ function App() {
           <Route path="profile" element={<CompleteProfilePage />} />
           <Route path="upload" element={<UploadOERPage />} />
           <Route path="upload/meta" element={<UploadOERMetaPage />} />
+          <Route path="personalized" element={<PersonalizedPlan />} />
         </Route>
       </Routes>
     </Router>
