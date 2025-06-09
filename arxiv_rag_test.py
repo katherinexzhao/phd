@@ -24,17 +24,43 @@ def fetch_arxiv_articles(query, limit=5):
         articles.append({"title": title, "summary": summary, "link": link})
     return articles
 
-# === 生成 Prompt，包含个性化信息 ===
+# === generate prompt, including personalized information ===
 def generate_prompt(topic, articles, preferences):
     pref_text = (
         f"The learner is a {preferences['expertise_level']} interested in {preferences['learning_style']} content. "
         f"They have about {preferences['time_commitment']} to study. "
-        f"Their preferred output format is {preferences['output_format']}.")
+        f"Their preferred output format is {preferences['output_format']}."
+    )
 
     prompt = pref_text + f"\n\nGenerate a 2-week study plan about '{topic}' using the following articles:\n\n"
     for idx, art in enumerate(articles):
-        prompt += f"Article {idx+1}: {art['title']}\nAbstract: {art['summary']}\n\n"
-    prompt += "Please organize the plan by day with bullet points and include quiz questions."
+        prompt += (
+            f"Article {idx+1}: {art['title']}\n"
+            f"Abstract: {art['summary']}\n"
+            f"URL: {art['link']}\n\n"
+        )
+
+    # 让 LLM 明确输出 resources 为对象数组 [{title, url}]
+    prompt += (
+        "Please organize the plan by day. For each day's resources, include the title and url as JSON objects.\n"
+        "For example, for each day:\n"
+        '{\n'
+        '  "day": "Day 1",\n'
+        '  "topic": "Intro",\n'
+        '  "activity": "Read Article 1",\n'
+        '  "resources": [{"title": "Article Title", "url": "https://arxiv.org/abs/xxxx.xxxx"}]\n'
+        '}\n'
+        "Return ONLY valid JSON, no explanation or extra text.\n"
+        "Format:\n"
+        '{\n'
+        '  "study_plan": [\n'
+        '    {\n'
+        '      "week": "Week 1",\n'
+        '      "days": [...days as above...]\n'
+        '    }, ...\n'
+        '  ]\n'
+        '}'
+    )
     return prompt
 
 # === 主程序 ===

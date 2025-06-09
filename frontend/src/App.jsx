@@ -10,7 +10,8 @@ import ChatbotPage from './pages/ChatbotPage'
 import CompleteProfilePage from './pages/CompleteProfilePage'
 import Layout from './pages/Layout'
 import InterestSelect from './pages/InterestSelect'
-import PersonalizedPlan from './pages/PersonalizedPlan';
+import PersonalizedFormSteps from './pages/PersonalizedFormSteps'
+import PersonalizedPlan from './pages/PersonalizedPlan'
 
 function InterestPageWrapper() {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/interest" element={<InterestPageWrapper />} />
+
         <Route path="/" element={<Layout />}>
           <Route path="home" element={<HomePage />} />
           <Route path="chatbot" element={<ChatbotPage />} />
@@ -45,8 +47,11 @@ function App() {
           <Route path="profile" element={<CompleteProfilePage />} />
           <Route path="upload" element={<UploadOERPage />} />
           <Route path="upload/meta" element={<UploadOERMetaPage />} />
-          <Route path="personalized" element={<PersonalizedPlan />} />
+          <Route path="personalized" element={<PersonalizedFormSteps />} />
         </Route>
+
+        {/* Ensure the personalized-plan route is outside of Layout to avoid sidebar */}
+        <Route path="/personalized-plan" element={<PersonalizedPlan />} />
       </Routes>
     </Router>
   )

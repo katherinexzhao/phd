@@ -1,110 +1,148 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-function PersonalizedPlan() {
-  const [topic, setTopic] = useState('');
-  const [expertise, setExpertise] = useState('beginner');
-  const [time, setTime] = useState('5 hours/week');
-  const [style, setStyle] = useState('visual');
-  const [format, setFormat] = useState('bullet points');
-  const [plan, setPlan] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!topic.trim()) {
-      setError('Please enter a topic before generating.');
-      return;
+const urlify = (text) => {
+  if (!text) return '';
+  // 匹配所有 http(s) 链接
+  return text.split(/(https?:\/\/[^\s,]+)/g).map((part, i) => {
+    if (/^https?:\/\//.test(part)) {
+      return (
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">
+          {part}
+        </a>
+      );
     }
-    setLoading(true);
-    setError(null);
-    setPlan('');
-    setSubmitted(true);
+    return part;
+  });
+};
 
+const PersonalizedPlan = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [studyPlan, setStudyPlan] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/generate-plan/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic,
-          expertise_level: expertise,
-          time_commitment: time,
-          learning_style: style,
-          output_format: format
-        })
-      });
-
-      const data = await res.json();
-      setPlan(data.study_plan || data.message);
-    } catch (err) {
-      setError('❌ Failed to fetch study plan.');
-    } finally {
+      let raw = location.state?.plan;
+      let parsed = null;
+      if (!raw) {
+        setError('No study plan provided. Please go back and generate one.');
+        setLoading(false);
+        return;
+      }
+      if (typeof raw === 'string') {
+        parsed = JSON.parse(raw);
+      } else if (raw.study_plan) {
+        parsed = raw;
+      } else if (Array.isArray(raw)) {
+        parsed = { study_plan: raw };
+      } else {
+        parsed = { study_plan: [] };
+      }
+      setStudyPlan(parsed.study_plan || []);
+      setLoading(false);
+    } catch (e) {
+      setError('Failed to parse study plan.');
       setLoading(false);
     }
-  };
+  }, [location.state]);
+
+  if (loading) {
+    return <div className="text-center mt-10">Loading your personalized study plan...</div>;
+  }
+  if (error) {
+    return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
+  }
+  if (!studyPlan.length) {
+    return (
+      <div className="text-center mt-10">
+        <p>No study plan available. Please go back to the personalized form to generate one.</p>
+        <button
+          onClick={() => navigate('/personalized')}
+          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          Generate New Plan
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">📚 Personalized Study Plan Generator</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          placeholder="Enter your topic"
-          className="w-full p-2 border border-gray-300 rounded"
-          required
-        />
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label>Expertise Level</label>
-            <select value={expertise} onChange={(e) => setExpertise(e.target.value)} className="w-full p-2 border border-gray-300 rounded">
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-4xl font-bold text-center text-indigo-800 mb-12">
+          📘 Your Weekly Daily Study Plan
+        </h1>
+        {studyPlan.map((week, weekIdx) => (
+          <div key={weekIdx} className="mb-12">
+            <h2 className="text-3xl font-bold text-indigo-700 mb-6">
+              {week.week || `Week ${weekIdx + 1}`}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(week.days || []).map((day, dayIdx) => {
+                return (
+                  <div
+                    key={dayIdx}
+                    className="bg-white rounded-xl shadow-md p-6 border-t-4 border-indigo-500 hover:shadow-lg transition-all duration-200"
+                  >
+                    <h3 className="text-xl font-semibold text-indigo-800 mb-2">
+                      {day.day || `Day ${dayIdx + 1}`}
+                    </h3>
+                    <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                      {day.topic && <li><strong>Topic:</strong> {day.topic}</li>}
+                      {day.activity && <li><strong>Activity:</strong> {day.activity}</li>}
+                      {day.resources && (
+                        <li>
+                          <strong>Resources:</strong>{" "}
+                          {Array.isArray(day.resources)
+                            ? day.resources.map((res, idx) => {
+                                if (typeof res === 'object' && res.url && res.title) {
+                                  return (
+                                    <span key={idx}>
+                                      <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">
+                                        {res.title}
+                                      </a>
+                                      {idx < day.resources.length - 1 ? ', ' : ''}
+                                    </span>
+                                  );
+                                }
+                                if (typeof res === 'string') {
+                                  return <span key={idx}>{urlify(res)}{idx < day.resources.length - 1 ? ', ' : ''}</span>;
+                                }
+                                return null;
+                              })
+                            : typeof day.resources === 'object' && day.resources.url && day.resources.title
+                            ? (
+                              <a href={day.resources.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">
+                                {day.resources.title}
+                              </a>
+                            )
+                            : typeof day.resources === 'string'
+                            ? urlify(day.resources)
+                            : null
+                          }
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div>
-            <label>Time Commitment</label>
-            <select value={time} onChange={(e) => setTime(e.target.value)} className="w-full p-2 border border-gray-300 rounded">
-              <option value="3 hours/week">3 hrs/week</option>
-              <option value="5 hours/week">5 hrs/week</option>
-              <option value="10 hours/week">10 hrs/week</option>
-            </select>
-          </div>
-          <div>
-            <label>Learning Style</label>
-            <select value={style} onChange={(e) => setStyle(e.target.value)} className="w-full p-2 border border-gray-300 rounded">
-              <option value="visual">Visual</option>
-              <option value="auditory">Auditory</option>
-              <option value="kinesthetic">Kinesthetic</option>
-              <option value="reading/writing">Reading/Writing</option>
-            </select>
-          </div>
-          <div>
-            <label>Output Format</label>
-            <select value={format} onChange={(e) => setFormat(e.target.value)} className="w-full p-2 border border-gray-300 rounded">
-              <option value="bullet points">Bullet Points</option>
-              <option value="summary + quiz">Summary + Quiz</option>
-              <option value="outline + reflection">Outline + Reflection</option>
-            </select>
-          </div>
+        ))}
+        <div className="mt-12 flex justify-center">
+          <button
+            onClick={() => navigate('/personalized')}
+            className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition"
+          >
+            Generate New Plan
+          </button>
         </div>
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" disabled={loading}>
-          {loading ? 'Generating...' : 'Generate Plan'}
-        </button>
-      </form>
-
-      {error && <div className="text-red-500 mt-4">{error}</div>}
-      {submitted && plan && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-2">✅ Generated Study Plan:</h2>
-          <pre className="whitespace-pre-wrap bg-gray-100 p-4 rounded">{plan}</pre>
-        </div>
-      )}
+      </div>
     </div>
   );
-}
+};
 
 export default PersonalizedPlan;
