@@ -4,6 +4,7 @@ const User = require('../models/User')
 const router = express.Router()
 const multer = require('multer');
 const path = require('path');
+const neo4j = require('../config/neo4j');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -34,7 +35,16 @@ router.post('/signup', upload.single('avatar'), async (req, res) => {
       titles
     });
     await user.save();
-    res.status(201).json({ success: true, message: 'User created' });
+    await neo4j.session().run(
+      `MERGE (u:User {id: $userId})
+       SET u.username = $username, u.email = $email`,
+      {
+        userId: user._id.toString(),
+        username: user.username,
+        email: user.email
+      }
+    );
+    res.status(201).json({ success: true, message: 'User created', userId: user._id });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
@@ -47,7 +57,16 @@ router.post('/login', async (req, res) => {
   if (!user) return res.status(400).json({ success: false, error: 'Invalid credentials' })
   const isMatch = await user.comparePassword(password)
   if (!isMatch) return res.status(400).json({ success: false, error: 'Invalid credentials' })
-  res.json({ success: true, message: 'Login successful', username: user.username })
+  await neo4j.session().run(
+    `MERGE (u:User {id: $userId})
+     SET u.username = $username, u.email = $email`,
+    {
+      userId: user._id.toString(),
+      username: user.username,
+      email: user.email
+    }
+  );
+  res.json({ success: true, message: 'Login successful', username: user.username, userId: user._id })
 })
 
 module.exports = router

@@ -72,6 +72,9 @@ function SignupPage() {
       if (res.data.success) {
         localStorage.setItem('email', form.email);
         localStorage.setItem('username', form.username);
+        if (res.data.userId) {
+          localStorage.setItem('userId', res.data.userId);
+        }
         setSuccess("Sign up successful! Please select your interests...");
         setTimeout(() => navigate("/interest"), 1200);
       } else {

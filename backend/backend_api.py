@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from arxiv_rag_test import fetch_arxiv_articles, generate_prompt
 from langchain_openai import ChatOpenAI
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import re
 import json
 
@@ -95,4 +97,4 @@ Please return a 2-week study plan with 7 days each week in **JSON** format like 
         return {
             "error": str(e),
             "raw_output": result.content
-        }
+        } 

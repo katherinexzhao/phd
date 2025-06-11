@@ -1,20 +1,30 @@
 const mongoose = require('mongoose');
 
 const OERSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  type: {
+  title: {
     type: String,
-    enum: ['Mental Health', 'First Aid', 'Academic Skills', 'Career Development', 'Study Techniques', 'Other'],
     required: true
   },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  file: {
-    data: Buffer,
-    contentType: String,
-    originalName: String
+  description: {
+    type: String,
+    required: true
   },
-  createdAt: { type: Date, default: Date.now }
+  url: {
+    type: String,
+    required: true
+  },
+  tags: [{
+    type: String
+  }],
+  uploader: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 module.exports = mongoose.model('OER', OERSchema); 

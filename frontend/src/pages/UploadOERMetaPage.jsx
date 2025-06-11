@@ -15,10 +15,35 @@ export default function UploadOERMetaPage() {
   const [keywords, setKeywords] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Submit all data to backend
-    setMessage('Submitted! (Demo)');
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      setMessage('User not logged in. Please log in again.');
+      return;
+    }
+    const tags = keywords.split(',').map(t => t.trim()).filter(Boolean);
+    const data = {
+      title: location.state?.title || '',
+      description: location.state?.description || '',
+      url: 'https://example.com/resource',
+      tags,
+      uploader: userId
+    };
+    try {
+      const res = await fetch('http://localhost:5001/api/oer/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        setMessage('OER uploaded successfully!');
+      } else {
+        setMessage('Upload failed');
+      }
+    } catch (err) {
+      setMessage('Upload error');
+    }
   };
 
   return (

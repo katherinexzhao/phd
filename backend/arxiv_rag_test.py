@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import requests
 from langchain_openai import ChatOpenAI
 
@@ -90,4 +92,4 @@ def main():
     print(result.content)
 
 if __name__ == "__main__":
-    main()
+    main() 

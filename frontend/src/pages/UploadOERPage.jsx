@@ -46,10 +46,10 @@ const UploadOERPage = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-stone-300/10 flex justify-center overflow-y-auto py-8">
-      <form onSubmit={handleNext} className="w-[1008px] min-h-[900px] bg-white rounded-2xl shadow flex flex-col items-center px-2 pb-8">
+    <div className="min-h-screen bg-stone-100 flex flex-col items-center py-8 overflow-y-auto">
+      <form onSubmit={handleNext} className="w-full max-w-2xl bg-white rounded-2xl shadow-lg flex flex-col items-center px-6 py-10">
         {/* Title Input */}
-        <div className="w-[907px] mt-10">
+        <div className="w-full">
           <div className="mb-1 text-base text-gray-700 font-semibold">Resource Title</div>
           <div className="mb-3 text-sm text-gray-500">Enter a clear and concise title for your resource.</div>
           <input
@@ -57,7 +57,7 @@ const UploadOERPage = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title of your post"
-            className="w-full h-12 px-4 text-xl font-['DM_Sans'] text-black/50 outline outline-1 outline-offset-[-1px] outline-black/30 focus:outline-blue-500 focus:text-black"
+            className="w-full h-12 px-4 text-xl text-black/80 border border-gray-300 rounded-lg focus:outline-blue-500 focus:text-black"
           />
         </div>
 
@@ -84,19 +84,19 @@ const UploadOERPage = () => {
         </div>
 
         {/* Description Input */}
-        <div className="w-[907px] mt-8">
+        <div className="w-full mt-8">
           <div className="mb-1 text-base text-gray-700 font-semibold">Resource Description</div>
           <div className="mb-3 text-sm text-gray-500">Describe your experience, tips, or details about this resource. The more detailed, the better!</div>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Write your experience, tips, or resource description..."
-            className="w-full h-44 p-4 text-xl font-['DM_Sans'] text-black/50 outline outline-1 outline-offset-[-1px] outline-black/30 focus:outline-blue-500 focus:text-black resize-none"
+            className="w-full h-32 p-4 text-lg text-black/80 border border-gray-300 rounded-lg focus:outline-blue-500 focus:text-black resize-none"
           />
         </div>
 
         {/* Resource Topic Input (direct input) */}
-        <div className="w-[907px] mt-8">
+        <div className="w-full mt-8">
           <div className="mb-1 text-base text-gray-700 font-semibold">Resource Topic</div>
           <div className="mb-3 text-sm text-gray-500">Please enter the topic that best matches your resource (e.g. Education, IT, Banking, etc.).</div>
           <input
@@ -104,17 +104,17 @@ const UploadOERPage = () => {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Enter your resource topic (required)"
-            className="w-full h-12 px-4 text-xl font-['DM_Sans'] text-black/50 outline outline-1 outline-offset-[-1px] outline-black/30 focus:outline-blue-500 focus:text-black"
+            className="w-full h-12 px-4 text-xl text-black/80 border border-gray-300 rounded-lg focus:outline-blue-500 focus:text-black"
           />
         </div>
 
         {/* File Upload Button */}
-        <div className="w-[907px] mt-8 flex flex-col items-start">
+        <div className="w-full mt-8 flex flex-col items-start">
           <div className="mb-1 text-base text-gray-700 font-semibold">Upload Resource File</div>
           <div className="mb-3 text-sm text-gray-500">Select the file you want to upload (PDF, Word, PPT, image, etc.).</div>
-          <div className="w-28 h-7 relative">
-            <label className="w-full h-full flex items-center justify-center bg-white rounded-[5px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-black/30 cursor-pointer hover:bg-gray-50">
-              <span className="text-black text-lg font-['DM_Sans']">Choose File</span>
+          <div className="w-32 h-10 relative">
+            <label className="w-full h-full flex items-center justify-center bg-white rounded-lg shadow outline outline-1 outline-black/20 cursor-pointer hover:bg-gray-50">
+              <span className="text-black text-lg">Choose File</span>
               <input
                 type="file"
                 onChange={(e) => setFile(e.target.files[0])}
@@ -130,17 +130,14 @@ const UploadOERPage = () => {
         {/* Next Button */}
         <button
           type="submit"
-          className={`mt-10 px-8 py-3 rounded-lg text-white text-lg font-semibold transition-all
-            bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl`}
+          className="mt-10 px-8 py-3 rounded-lg text-white text-lg font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl w-full max-w-xs"
         >
           Next
         </button>
 
         {/* Messages */}
         {message && (
-          <div className={`mt-4 px-4 py-2 rounded-lg text-center bg-red-100 text-red-700`}>
-            {message}
-          </div>
+          <div className="mt-4 px-4 py-2 rounded-lg text-center bg-red-100 text-red-700 w-full">{message}</div>
         )}
       </form>
     </div>

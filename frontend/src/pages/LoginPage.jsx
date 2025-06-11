@@ -27,6 +27,9 @@ const LoginPage = () => {
         if (data.username) {
           localStorage.setItem('username', data.username);
         }
+        if (data.userId) {
+          localStorage.setItem('userId', data.userId);
+        }
         navigate('/home');
       } else {
         setError(data.error || 'Login failed');

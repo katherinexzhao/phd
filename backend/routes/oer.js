@@ -3,6 +3,7 @@ const multer = require('multer');
 const OER = require('../models/OER');
 const router = express.Router();
 const axios = require('axios');
+const neo4j = require('../neo4j');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -23,36 +24,68 @@ router.get('/check-upload', async (req, res) => {
   }
 });
 
-router.post('/upload', upload.single('file'), async (req, res) => {
-  console.log('OER upload called', req.body, req.file);
+router.post('/upload', async (req, res) => {
   try {
-    const email = req.body.email;
-    if (!email) return res.status(400).json({ error: 'Missing email' });
-    const User = require('../models/User');
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: 'User not found' });
+    const { title, description, url, tags, uploader } = req.body;
 
-    const { title, description, type } = req.body;
-    const file = req.file;
-    if (!file) return res.status(400).json({ error: 'No file uploaded' });
-    if (!type) return res.status(400).json({ error: 'Resource type is required' });
-
+    // Create OER in MongoDB
     const oer = new OER({
       title,
       description,
-      type,
-      userId: user._id,
-      file: {
-        data: file.buffer,
-        contentType: file.mimetype,
-        originalName: file.originalname
-      }
+      url,
+      tags,
+      uploader
     });
+
     await oer.save();
-    res.status(201).json({ message: 'OER uploaded successfully' });
-  } catch (err) {
-    console.error('Upload error:', err);
-    res.status(500).json({ error: 'Upload failed' });
+
+    // Sync tags to Neo4j
+    const session = neo4j.session();
+    try {
+      // Create OER node in Neo4j with only title, uploader, and topic
+      await session.run(
+        `MERGE (o:OER {id: $id})
+         SET o.title = $title,
+             o.uploader = $uploader,
+             o.topic = $topic`,
+        {
+          id: oer._id.toString(),
+          title,
+          uploader: uploader ? uploader.toString() : '',
+          topic: tags && tags.length > 0 ? tags[0] : '' 
+        }
+      );
+
+      // Create tag nodes and relationships
+      for (const tag of tags) {
+        await session.run(
+          `MATCH (o:OER {id: $oerId})
+           MERGE (t:Tag {name: $tagName})
+           MERGE (o)-[:HAS_TAG]->(t)`,
+          { oerId: oer._id.toString(), tagName: tag }
+        );
+      }
+
+      // Create UPLOADED relationship from User to OER
+      await session.run(
+        `MATCH (u:User {id: $userId}), (o:OER {id: $oerId})
+         MERGE (u)-[:UPLOADED]->(o)`,
+        {
+          userId: uploader ? uploader.toString() : '',
+          oerId: oer._id.toString()
+        }
+      );
+
+      res.status(201).json({ 
+        message: 'OER uploaded and tags synced successfully',
+        oer 
+      });
+    } finally {
+      await session.close();
+    }
+  } catch (error) {
+    console.error('Error uploading OER:', error);
+    res.status(500).json({ error: 'Error uploading OER' });
   }
 });
 
@@ -68,6 +101,29 @@ router.get('/external-oer', async (req, res) => {
     res.json(response.data);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch from OER Commons' });
+  }
+});
+
+// Get all OERs
+router.get('/', async (req, res) => {
+  try {
+    const oers = await OER.find().populate('uploader', 'username');
+    res.json(oers);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching OERs' });
+  }
+});
+
+// Get OER by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const oer = await OER.findById(req.params.id).populate('uploader', 'username');
+    if (!oer) {
+      return res.status(404).json({ error: 'OER not found' });
+    }
+    res.json(oer);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching OER' });
   }
 });
 
