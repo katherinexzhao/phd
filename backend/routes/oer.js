@@ -3,7 +3,7 @@ const multer = require('multer');
 const OER = require('../models/OER');
 const router = express.Router();
 const axios = require('axios');
-const neo4j = require('../neo4j');
+const neo4j = require('../config/neo4j');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });

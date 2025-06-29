@@ -12,7 +12,10 @@ import Layout from './pages/Layout'
 import InterestSelect from './pages/InterestSelect'
 import PersonalizedFormSteps from './pages/PersonalizedFormSteps'
 import PersonalizedPlan from './pages/PersonalizedPlan'
-
+import DayDetails from './pages/DayDetails.jsx'
+import SearchResults from './pages/SearchResults';
+import SavedPage from './pages/SavedPage';
+import SavedPlans from './pages/SavedPlans'
 function InterestPageWrapper() {
   const navigate = useNavigate();
   const handleSubmit = async (selectedInterests) => {
@@ -48,6 +51,10 @@ function App() {
           <Route path="upload" element={<UploadOERPage />} />
           <Route path="upload/meta" element={<UploadOERMetaPage />} />
           <Route path="personalized" element={<PersonalizedFormSteps />} />
+          <Route path="paper/:id" element={<DayDetails />} />
+          <Route path="/search-results" element={<SearchResults />} />
+          <Route path="/saved" element={<SavedPage />} />
+          <Route path="saved-plans" element={<SavedPlans />} />
         </Route>
 
         {/* Ensure the personalized-plan route is outside of Layout to avoid sidebar */}

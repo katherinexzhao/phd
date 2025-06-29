@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import PaperCard from './PaperCard';
 
 function extractLink(r) {
   if (Array.isArray(r.fullTextLinks) && r.fullTextLinks.length > 0 && r.fullTextLinks[0].url) return r.fullTextLinks[0].url;
@@ -41,17 +43,30 @@ function CoreSearch() {
     setResults([]);
     try {
       const res = await fetch(`/api/core/search?query=${encodeURIComponent(query)}&page=${toPage}`);
-      const data = await res.json();
-      if (data.results && data.results.length > 0) {
-        setResults(data.results);
-        setTotalHits(data.totalHits || 0);
-        setLimit(data.limit || 50);
-        setPage(data.page || 1);
-      } else {
-        setError('No results found.');
-        setResults([]);
-        setTotalHits(0);
-      }
+
+    if (!res.ok) {
+      throw new Error(`Server returned ${res.status}`);
+    }
+
+pagination.map
+      try {
+  const res = await fetch(`/api/core/search?query=${encodeURIComponent(query)}&page=${toPage}`);
+  const data = await res.json();
+  
+  if (data.results && data.results.length > 0) {
+    setResults(data.results);
+    setTotalHits(data.totalHits || 0);
+    setLimit(data.limit || 50);
+    setPage(data.page || 1);
+    setError('');   
+  } else {
+    setError('No results found.');
+    setResults([]);
+    setTotalHits(0);
+  }
+} catch (err) {
+  setError('Failed to fetch resources.');
+}
     } catch (err) {
       setError('Failed to fetch resources.');
     }
@@ -63,40 +78,55 @@ function CoreSearch() {
 
   return (
     <div className="w-full flex flex-col items-center">
-      <form onSubmit={handleSearch} className="mb-8 flex w-full max-w-2xl shadow-md rounded-xl overflow-hidden">
+      <form onSubmit={handleSearch} className="w-full max-w-2xl flex">
         <input
-          type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Search Open Education Resources..."
-          className="flex-1 border border-gray-200 px-6 py-4 text-lg focus:outline-none"
+          placeholder="Ask anything..."
+          className="
+            flex-1
+            bg-white
+            rounded-l-full
+            px-6
+            py-3
+            shadow-md
+            placeholder-gray-300
+            focus:outline-none
+            focus:ring-2 focus:ring-gray-400
+            transition"
         />
-        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 font-semibold transition-all">
+        <button type="submit" className="bg-black
+            text-white
+            font-semibold
+            px-8
+            py-3
+            rounded-r-full
+            shadow-lg
+            hover:bg-gray-800
+            transition-colors duration-200 ease-in-out">
           Search
         </button>
       </form>
 
       
-      {loading && <div className="text-blue-500 font-medium">Loading...</div>}
+      {loading && <div className="text-gray-500 font-medium">Loading...</div>}
       {error && <div className="text-red-500 mb-2">{error}</div>}
 
       <div className="w-full max-w-2xl">
         <ul>
           {results.map((r, idx) => {
+            console.log('paper', r);
             const link = extractLink(r);
             return (
-              <li key={r.id || r.doi || idx} className="mb-4 bg-white p-5 rounded-xl shadow-md hover:shadow-lg transition">
-                {link ? (
-                  <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-700 text-lg font-semibold hover:underline">
-                    {r.title || r.titleFull || 'Untitled'}
-                  </a>
-                ) : (
-                  <span className="text-gray-500 font-semibold text-lg">
-                    {r.title || r.titleFull || 'Untitled'}
-                  </span>
-                )}
-                <div className="text-gray-600 text-sm mt-2 line-clamp-3">{r.description || r.abstract || ''}</div>
-              </li>
+              <PaperCard
+  key={r.id || r.doi || idx}
+  id={r.id || r.doi || idx}
+  title={r.title || r.titleFull || 'Untitled'}
+  summary={(r.description || r.abstract || '').slice(0, 200)}
+  fullSummary={r.description || r.abstract || ''}
+  url={link}
+  imageUrl={r.imageUrl || r.thumbnail || r.cover || null}
+/>
             );
           })}
         </ul>
@@ -105,26 +135,26 @@ function CoreSearch() {
       {totalPages > 1 && (
         <div className="flex flex-wrap gap-2 mt-6 items-center">
           <button
-            className="px-3 py-2 rounded-lg border font-semibold bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+            className="px-3 py-2 rounded-lg border font-semibold bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
             onClick={() => handleSearch(null, Math.max(1, page - 1))}
             disabled={page === 1}
           >
             Prev
           </button>
           {pagination.map((p, i) =>
-            p === '...'
-              ? <span key={i} className="px-2 text-gray-400">...</span>
-              : <button
-                  key={p}
-                  className={`px-4 py-2 rounded-lg border font-semibold ${page === p ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'}`}
-                  onClick={() => handleSearch(null, p)}
-                  disabled={page === p}
-                >
-                  {p}
-                </button>
-          )}
+  p === '...'
+    ? <span key={`ellipsis-${i}`} className="px-2 text-gray-400">...</span>
+    : <button
+        key={`page-${p}`}  
+        className={`px-4 py-2 rounded-lg border font-semibold ${page === p ? 'bg-gray-600 text-white border-gray-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+        onClick={() => handleSearch(null, p)}
+        disabled={page === p}
+      >
+        {p}
+      </button>
+)}
           <button
-            className="px-3 py-2 rounded-lg border font-semibold bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+            className="px-3 py-2 rounded-lg border font-semibold bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
             onClick={() => handleSearch(null, Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
           >
@@ -139,12 +169,14 @@ function CoreSearch() {
 export default function HomePage() {
   const username = typeof window !== 'undefined' ? localStorage.getItem('username') : '';
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col items-center pt-24 pb-16 px-4">
+    <div className="bg-gray-50 min-h-screen flex flex-col items-center pt-16 pb-16 px-4">
       <div className="max-w-2xl w-full text-center mb-8">
-        <h1 className="text-4xl font-extrabold text-blue-800 mb-2 drop-shadow">{username ? `Welcome, ${username}!` : 'Welcome!'}</h1>
+        <h1 className="text-4xl font-extrabold text-gray-750 mb-2 drop-shadow">{username ? `Welcome, ${username}!` : 'Welcome!'}</h1>
         <p className="text-gray-600 text-lg">Search Open Education Resources</p>
       </div>
-      <CoreSearch />
+      <div className="w-full max-w-2xl mt-8">
+        <CoreSearch />
+      </div>
     </div>
   );
 }

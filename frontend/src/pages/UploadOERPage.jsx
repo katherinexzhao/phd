@@ -57,7 +57,7 @@ const UploadOERPage = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title of your post"
-            className="w-full h-12 px-4 text-xl text-black/80 border border-gray-300 rounded-lg focus:outline-blue-500 focus:text-black"
+            className="w-full h-12 px-4 text-xl text-black/80 border border-gray-300 rounded-lg focus:outline-gray-500 focus:text-black"
           />
         </div>
 
@@ -91,7 +91,7 @@ const UploadOERPage = () => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Write your experience, tips, or resource description..."
-            className="w-full h-32 p-4 text-lg text-black/80 border border-gray-300 rounded-lg focus:outline-blue-500 focus:text-black resize-none"
+            className="w-full h-32 p-4 text-lg text-black/80 border border-gray-300 rounded-lg focus:outline-gray-500 focus:text-black resize-none"
           />
         </div>
 
@@ -104,7 +104,7 @@ const UploadOERPage = () => {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Enter your resource topic (required)"
-            className="w-full h-12 px-4 text-xl text-black/80 border border-gray-300 rounded-lg focus:outline-blue-500 focus:text-black"
+            className="w-full h-12 px-4 text-xl text-black/80 border border-gray-300 rounded-lg focus:outline-gray-500 focus:text-black"
           />
         </div>
 
@@ -130,7 +130,7 @@ const UploadOERPage = () => {
         {/* Next Button */}
         <button
           type="submit"
-          className="mt-10 px-8 py-3 rounded-lg text-white text-lg font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl w-full max-w-xs"
+          className="mt-10 px-8 py-3 rounded-lg text-white text-lg font-semibold bg-black hover:bg-gray-700 shadow-lg hover:shadow-xl w-full max-w-xs"
         >
           Next
         </button>

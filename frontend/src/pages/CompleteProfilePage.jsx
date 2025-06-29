@@ -92,9 +92,9 @@ export default function CompleteProfilePage() {
   if (!user) return <div className="flex justify-center items-center h-full">Profile not found</div>;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md flex flex-col items-center">
-        <h2 className="text-2xl font-bold mb-4 text-indigo-700">My Profile</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-700">My Profile</h2>
         <div className="mb-4 flex flex-col items-center">
           <img
             src={form.avatarPreview || user.avatarUrl || DEFAULT_AVATAR}
@@ -145,17 +145,17 @@ export default function CompleteProfilePage() {
             <div className="flex flex-wrap gap-2">
               {form.titles.length === 0 && <span className="text-gray-400">No interests</span>}
               {form.titles.map((title, idx) => (
-                <span key={idx} className="px-3 py-1 rounded-xl border bg-indigo-100 text-indigo-700 text-sm">{title}</span>
+                <span key={idx} className="px-3 py-1 rounded-xl border bg-gray-100 text-gray-700 text-sm">{title}</span>
               ))}
             </div>
           </div>
           {error && <p className="text-red-500 text-sm text-center mb-2">{error}</p>}
           <div className="flex w-full justify-between mt-2">
             {!editMode ? (
-              <button type="button" className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-6 rounded-xl font-semibold w-full" onClick={handleEdit}>Edit</button>
+              <button type="button" className="bg-black hover:bg-gray-600 text-white py-2 px-6 rounded-xl font-semibold w-full" onClick={handleEdit}>Edit</button>
             ) : (
               <>
-                <button type="submit" className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-6 rounded-xl font-semibold mr-2">Save</button>
+                <button type="submit" className="bg-gray -500 hover:bg-gray-600 text-white py-2 px-6 rounded-xl font-semibold mr-2">Save</button>
                 <button type="button" className="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-6 rounded-xl font-semibold" onClick={handleCancel}>Cancel</button>
               </>
             )}
