@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../api";
 
 export default function GroupListPage() {
   const [groups, setGroups] = useState([]);
@@ -9,14 +10,14 @@ export default function GroupListPage() {
 
   const fetchGroups = async () => {
     try {
-      const res = await axios.get("/api/groups");
+      const res = await axios.get(`${API_BASE_URL}/api/groups`);
       setGroups(res.data.groups);
       // Check membership for all groups after fetching
       const userId = localStorage.getItem("userId");
       if (userId) {
         const checks = res.data.groups.map(group =>
           axios
-            .get(`/api/groups/${group.id}/is-member`, { params: { userId } })
+            .get(`${API_BASE_URL}/api/groups/${group.id}/is-member`, { params: { userId } })
             .then(r => r.data.isMember ? group.id : null)
         );
         const results = await Promise.all(checks);
@@ -41,7 +42,7 @@ const handleJoin = async (groupId) => {
   }
 
   try {
-    await axios.post(`/api/groups/${groupId}/join`, { userId });
+    await axios.post(`${API_BASE_URL}/api/groups/${groupId}/join`, { userId });
     setJoinedGroups(prev => [...prev, groupId]); 
     alert("Joined group!");
   } catch (err) {
@@ -52,7 +53,7 @@ const handleJoin = async (groupId) => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/groups", newGroup);
+      await axios.post(`${API_BASE_URL}/api/groups`, newGroup);
       setNewGroup({ name: "", description: "" });
       fetchGroups(); // 刷新列表
     } catch (err) {

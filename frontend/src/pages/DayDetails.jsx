@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ChatWindow from './ChatWindow';
+import { API_BASE_URL } from "../api";
 
 const DayDetails = () => {
   const { id } = useParams();
@@ -18,7 +19,7 @@ const DayDetails = () => {
       return;
     }
 
-    axios.get(`/api/oer/${id}`)
+    axios.get(`${API_BASE_URL}/api/oer/${id}`)
       .then(res => { setDayData(res.data); setLoading(false); })
       .catch(() => { setDayData(undefined); setLoading(false); });
   }, [id, location.state]);

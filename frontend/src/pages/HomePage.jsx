@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PaperCard from './PaperCardSearch';
 import RecommendedContent from './RecommendHomePage';
+import { API_BASE_URL } from "../api";
 
 function extractLink(r) {
   if (Array.isArray(r.fullTextLinks) && r.fullTextLinks.length > 0 && r.fullTextLinks[0].url) return r.fullTextLinks[0].url;
@@ -43,7 +44,7 @@ function CoreSearch() {
     setError('');
     setResults([]);
     try {
-      const res = await fetch(`/api/core/search?query=${encodeURIComponent(query)}&page=${toPage}`);
+      const res = await fetch(`${API_BASE_URL}/api/core/search?query=${encodeURIComponent(query)}&page=${toPage}`);
 
     if (!res.ok) {
       throw new Error(`Server returned ${res.status}`);
@@ -51,7 +52,7 @@ function CoreSearch() {
 
 pagination.map
       try {
-  const res = await fetch(`/api/core/search?query=${encodeURIComponent(query)}&page=${toPage}`);
+  const res = await fetch(`${API_BASE_URL}/api/core/search?query=${encodeURIComponent(query)}&page=${toPage}`);
   const data = await res.json();
   
   if (data.results && data.results.length > 0) {

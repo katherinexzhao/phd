@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from "../api";
 
 export default function GroupDetail() {
   const { groupId } = useParams();
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    axios.get(`/api/group/${groupId}/posts`)
+    axios.get(`${API_BASE_URL}/api/group/${groupId}/posts`)
       .then(res => {
         setPosts(res.data.posts);
       })

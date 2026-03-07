@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TagPickerModal from './TagPickerModal';
+import { API_BASE_URL } from "../api";
+
 
 console.log("✅ Loaded PaperCardSearch component");
 
@@ -17,7 +19,7 @@ const PaperCard = ({ id, title, summary, fullSummary, url, coverUrl }) => {
   useEffect(() => {
     if (!openTagModal) return;
     const username = localStorage.getItem('username');
-    fetch(`/api/tags?username=${username}`)
+    fetch(`${API_BASE_URL}/api/tags?username=${username}`)
       .then(res => res.json())
       .then(data => setTags(data || []))
       .catch(() => setTags([]));
@@ -26,7 +28,7 @@ const PaperCard = ({ id, title, summary, fullSummary, url, coverUrl }) => {
   useEffect(() => {
     if (!openForwardModal) return;
     const username = localStorage.getItem('username');
-    fetch(`/api/tags?username=${username}`)
+    fetch(`${API_BASE_URL}/api/tags?username=${username}`)
       .then(res => res.json())
       .then(data => setTags(data || []))
       .catch(() => setTags([]));
@@ -43,7 +45,7 @@ const PaperCard = ({ id, title, summary, fullSummary, url, coverUrl }) => {
       return;
     }
     try {
-      const res = await fetch('/api/save', {
+      const res = await fetch(`${API_BASE_URL}/api/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, paper: { id, title, url }, tag }),
@@ -75,7 +77,7 @@ const PaperCard = ({ id, title, summary, fullSummary, url, coverUrl }) => {
     };
 
     try {
-      const res = await fetch('http://localhost:5001/api/oer', {
+      const res = await fetch(`${API_BASE_URL}/api/oer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPost)

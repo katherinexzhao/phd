@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from "../api";
 
 export default function UploadOERMetaPage() {
   const location = useLocation();
@@ -46,7 +47,7 @@ export default function UploadOERMetaPage() {
     }
 
     try {
-      const res = await fetch('http://localhost:5001/api/oer/upload-file', {
+      const res = await fetch(`${API_BASE_URL}/api/oer/upload-file`, {
         method: 'POST',
         body: formData
       });

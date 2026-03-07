@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SavedPaperCard from './SavedPaperCard';
+import { API_BASE_URL } from "../api";
 
 const SavedPage = () => {
   const [saved, setSaved] = useState({});
@@ -12,7 +13,7 @@ const SavedPage = () => {
       const username = localStorage.getItem('username');
       if (!username) return;
       try {
-        const res = await fetch(`http://localhost:5001/api/saved?username=${username}`);
+        const res = await fetch(`${API_BASE_URL}/api/saved?username=${username}`);
         const data = await res.json();
         setSaved(data);
       } catch (err) {

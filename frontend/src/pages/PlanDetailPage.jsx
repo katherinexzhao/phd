@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ChatWindow from './ChatWindow';
+import { API_BASE_URL } from "../api";
 
 export default function PlanDetailPage() {
   const { planId } = useParams();
@@ -31,7 +32,7 @@ export default function PlanDetailPage() {
 
   useEffect(() => {
     if (!planId) return;
-    fetch(`http://localhost:5001/api/plan/${planId}`)
+    fetch(`${API_BASE_URL}/api/plan/${planId}`)
       .then(res => res.json())
       .then(data => {
         let parsed = data.content;
@@ -71,7 +72,7 @@ export default function PlanDetailPage() {
 
     console.log('🧪 Sending podcast generation request with text:', text);
     try {
-      const res = await fetch('http://localhost:5001/api/generate-audio', {
+      const res = await fetch(`${API_BASE_URL}/api/generate-audio`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +142,7 @@ export default function PlanDetailPage() {
                     {audioMap[key] && (
                       <div className="mt-2 rounded overflow-hidden border border-gray-300 p-2 bg-gray-50">
                         <audio controls className="w-full" key={audioMap[key]}>
-                          <source src={`http://localhost:5001${audioMap[key]}?t=${Date.now()}`} type="audio/mpeg" />
+                          <source src={`${API_BASE_URL}${audioMap[key]}?t=${Date.now()}`} type="audio/mpeg" />
                           Your browser does not support the audio element.
                         </audio>
                       </div>

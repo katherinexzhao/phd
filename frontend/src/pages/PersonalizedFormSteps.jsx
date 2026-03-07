@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { API_BASE_URL } from "../api";
 
 const PersonalizedFormSteps = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const PersonalizedFormSteps = () => {
 
     try {
       // generate study plan from AI service
-      const genRes = await fetch("http://127.0.0.1:5001/api/generate-plan/", {
+      const genRes = await fetch(`${API_BASE_URL}/api/generate-plan/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

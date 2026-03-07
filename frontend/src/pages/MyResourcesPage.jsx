@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {useNavigate} from 'react-router-dom';
-
+import { API_BASE_URL } from "../api";
 
 
 export default function MyResourcesPage() {
@@ -12,7 +12,7 @@ export default function MyResourcesPage() {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const res = await fetch(`http://localhost:5001/api/oer/user/${userId}`);
+        const res = await fetch(`${API_BASE_URL}/api/oer/user/${userId}`);
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         console.log('🎯 My resources:', data); // 调试输出
@@ -63,7 +63,7 @@ export default function MyResourcesPage() {
                   onClick={(e) => {
                     e.stopPropagation();
                     if (window.confirm('Are you sure you want to delete this resource?')) {
-                      fetch(`http://localhost:5001/api/oer/${res._id}`, {
+                      fetch(`${API_BASE_URL}/api/oer/${res._id}`, {
                         method: 'DELETE',
                       })
                         .then(() => {

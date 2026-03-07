@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from "../api";
 
 const DEFAULT_AVATAR = '/Logo_1.pic.jpg';
 
@@ -16,7 +17,7 @@ export default function CompleteProfilePage() {
     async function fetchUser() {
       setLoading(true);
       try {
-        const res = await axios.get('/api/user/profile', { params: { email } });
+        const res = await axios.get(`${API_BASE_URL}/api/user/profile`, { params: { email } });
         if (res.data.success) {
           setUser(res.data.user);
           setForm({
@@ -74,7 +75,7 @@ export default function CompleteProfilePage() {
     form.titles.forEach(t => formData.append('titles', t));
     if (form.avatarFile) formData.append('avatar', form.avatarFile);
     try {
-      const res = await axios.post('/api/user/complete-profile', formData, {
+      const res = await axios.post(`${API_BASE_URL}/api/user/complete-profile`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (res.data.success) {

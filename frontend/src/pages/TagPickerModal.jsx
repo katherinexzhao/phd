@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from "../api";
 
 export default function TagPickerModal({ open, onClose, onSave }) {
   const [tags, setTags] = useState([]);
@@ -9,7 +10,7 @@ export default function TagPickerModal({ open, onClose, onSave }) {
   useEffect(() => {
     if (!open) return;
     const username = localStorage.getItem('username');
-    fetch(`/api/tags?username=${username}`)
+    fetch(`${API_BASE_URL}/api/tags?username=${username}`)
       .then(res => res.json())
       .then(data => setTags(data || []))
       .catch(() => setTags([]));
@@ -26,7 +27,7 @@ export default function TagPickerModal({ open, onClose, onSave }) {
   const deleteTag = async tag => {
     const username = localStorage.getItem('username');
     try {
-      const res = await fetch('/api/tag', {
+      const res = await fetch(`${API_BASE_URL}/api/tag`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, tag }),

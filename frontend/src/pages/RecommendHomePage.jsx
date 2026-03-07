@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
+import { API_BASE_URL } from "../api";
 
 export default function RecommendHomePage() {
   const [resources, setResources] = useState([]);
@@ -14,11 +15,11 @@ export default function RecommendHomePage() {
     const fetchRecommendations = async () => {
       if (!email) return;
       try {
-        const profileRes = await fetch(`http://localhost:5001/api/user/profile?email=${email}`);
+        const profileRes = await fetch(`${API_BASE_URL}/api/user/profile?email=${email}`);
         const profileData = await profileRes.json();
         const interests = profileData.user?.titles || [];
 
-        const oerRes = await fetch('http://localhost:5001/api/recommend/recommend-oers', {
+        const oerRes = await fetch(`${API_BASE_URL}/api/recommend/recommend-oers`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId })
@@ -27,7 +28,7 @@ export default function RecommendHomePage() {
         if (!Array.isArray(matchedResources)) matchedResources = [];
 
         if (matchedResources.length < 5) {
-          const trendingRes = await fetch('http://localhost:5001/api/oer/trending');
+          const trendingRes = await fetch(`${API_BASE_URL}/api/oer/trending`);
           const trendingData = await trendingRes.json();
           const trending = Array.isArray(trendingData) ? trendingData : [];
           matchedResources = [...matchedResources, ...trending];

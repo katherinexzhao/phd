@@ -26,13 +26,14 @@ import EditResourcePage from './pages/EditResourcePage.jsx'
 import RecommendHomePage from './pages/RecommendHomePage.jsx'
 import CommunityPage from './pages/CommunityPage.jsx'
 import PaperCard from './pages/PaperCardSearch.jsx'
+import { API_BASE_URL } from "../api";
 
 function InterestPageWrapper() {
   const navigate = useNavigate();
   const handleSubmit = async (selectedInterests) => {
     const email = localStorage.getItem('email');
     try {
-      await fetch('/api/user/interests', {
+      await fetch(`${API_BASE_URL}/api/user/interests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, interests: selectedInterests })

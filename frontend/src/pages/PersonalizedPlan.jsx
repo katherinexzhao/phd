@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useRevalidator } from 'react-router-dom';
+import { API_BASE_URL } from "../api";
 
 const urlify = (text) => {
   if (!text) return '';
@@ -60,7 +61,7 @@ const PersonalizedPlan = () => {
       return;
     }
     try {
-      const res = await fetch('http://localhost:5001/api/plan/save', {
+      const res = await fetch(`${API_BASE_URL}/api/plan/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from "../api";
 
 
 const ChatWindow = ({ context }) => {
@@ -16,12 +17,12 @@ const ChatWindow = ({ context }) => {
     setChat(prev => [...prev, userMsg]);
 
     try {
-      const res = await axios.post('/api/chat', { message: input, context: context });
+      const res = await axios.post(`${API_BASE_URL}/api/chat`, { message: input, context: context });
       const botMsg = { role: 'assistant', content: res.data.reply };
       setChat(prev => [...prev, userMsg, botMsg]);
       setInput('');
     } catch (error) {
-      console.error('❌ Error from /api/chat:', error.response?.data || error.message);
+      console.error('❌ Error from ${API_BASE_URL}/api/chat:', error.response?.data || error.message);
       setChat(prev => [...prev, userMsg, { role: 'assistant', content: "Error contacting AI." }]);
     }
   };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
+import { API_BASE_URL } from "../api";
 
 export default function CommunityPage() {
   const [resources, setResources] = useState([]);
@@ -10,7 +11,7 @@ export default function CommunityPage() {
   useEffect(() => {
     const fetchAllResources = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/oer');
+        const res = await fetch(`${API_BASE_URL}/api/oer`);
         const data = await res.json();
         setResources(data.filter(r => !r.hidden));
       } catch (err) {

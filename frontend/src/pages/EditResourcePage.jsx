@@ -1,6 +1,7 @@
 // EditResourcePage.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from "../api";
 
 export default function EditResourcePage() {
   const { resourceId } = useParams();
@@ -14,7 +15,7 @@ export default function EditResourcePage() {
 
   useEffect(() => {
     const fetchResource = async () => {
-      const res = await fetch(`http://localhost:5001/api/oer/${resourceId}`);
+      const res = await fetch(`${API_BASE_URL}/api/oer/${resourceId}`);
       const data = await res.json();
       setResource(data);
       setFormData({
@@ -34,7 +35,7 @@ export default function EditResourcePage() {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:5001/api/oer/${resourceId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/oer/${resourceId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

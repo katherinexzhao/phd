@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import axios from "axios";
+import { API_BASE_URL } from "../api";
 
 const TITLES = ["Mental health", "First aid", "Other"];
 
@@ -66,7 +67,7 @@ function SignupPage() {
     form.titles.forEach((t) => formData.append("titles", t));
     formData.append("avatar", avatarToUpload);
     try {
-      const res = await axios.post("/api/auth/signup", formData, {
+      const res = await axios.post(`${API_BASE_URL}/api/auth/signup`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       if (res.data.success) {

@@ -1,6 +1,7 @@
 import { Content } from '@radix-ui/react-tabs';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { API_BASE_URL } from "../api";
 
 export default function ResourceDetailPage() {
   const { id } = useParams();
@@ -12,7 +13,7 @@ export default function ResourceDetailPage() {
   useEffect(() => {
     const fetchResource = async () => {
       try {
-        const res = await fetch(`http://localhost:5001/api/oer/${id}`);
+        const res = await fetch(`${API_BASE_URL}/api/oer/${id}`);
         if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
         const data = await res.json();
         setResource(data);
@@ -23,7 +24,7 @@ export default function ResourceDetailPage() {
 
     const fetchComments = async () => {
       try {
-        const res = await fetch(`http://localhost:5001/api/comment/${id}`);
+        const res = await fetch(`${API_BASE_URL}/api/comment/${id}`);
         const result = await res.json();
         setComments(result.comments || []);
       } catch (err) {
@@ -38,7 +39,7 @@ export default function ResourceDetailPage() {
   const handlePostComment = async () => {
     if (!commentInput) return;
     try {
-      const res = await fetch('http://localhost:5001/api/comment', {
+      const res = await fetch(`${API_BASE_URL}/api/comment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, targetId: id, targetType: 'OER', text: commentInput })

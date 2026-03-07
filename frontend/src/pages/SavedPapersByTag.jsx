@@ -9,7 +9,7 @@ import SavedPaperCard from './SavedPaperCard';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import SelectAllControls from '../components/SelectAllControls';
-
+import { API_BASE_URL } from "../api";
 
 
 
@@ -50,7 +50,7 @@ const SavedPapersByTag = ({ papersByTag }) => {
 
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5001/api/study-plan/from-selected', {
+      const res = await axios.post(`${API_BASE_URL}/api/study-plan/from-selected`, {
         username,
         papers: selectedPapers,
       });

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import PlanCard from '../components/PlanCard';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from "../api";
 
 export default function SavedPlans() {
   const [plans, setPlans] = useState([]);
@@ -11,7 +12,7 @@ export default function SavedPlans() {
     const username = localStorage.getItem('username');
     if (!username) return;
 
-    fetch(`http://localhost:5001/api/saved-plans?username=${username}`)
+    fetch(`${API_BASE_URL}/api/saved-plans?username=${username}`)
       .then(res => res.json())
       .then(data => {
         setPlans(data);
@@ -26,7 +27,7 @@ export default function SavedPlans() {
     console.log("🗑️ Trying to delete plan:", planId);
     if (!planId) return;
     try {
-      const res = await fetch(`http://localhost:5001/api/plan/${planId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/plan/${planId}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error(`Status ${res.status}`);

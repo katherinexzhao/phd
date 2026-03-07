@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import TagPickerModal from './TagPickerModal';
 import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
+import { API_BASE_URL } from "../api";
 
 const SavedPaperCard = ({ id, title, url, checked, onToggle }) => {
   const [openTagModal, setOpenTagModal] = useState(false);
@@ -14,7 +15,7 @@ const SavedPaperCard = ({ id, title, url, checked, onToggle }) => {
 
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5001/api/study-plan/from-saved', { userId });
+      const res = await axios.post(`${API_BASE_URL}/api/study-plan/from-saved`, { userId });
       setPlan(res.data.plan || '');
     } catch (err) {
       console.error('Failed to generate plan', err);
@@ -29,7 +30,7 @@ const SavedPaperCard = ({ id, title, url, checked, onToggle }) => {
     if (!username) return;
 
     try {
-      const res = await fetch('http://localhost:5001/api/unsave', {
+      const res = await fetch(`${API_BASE_URL}/api/unsave`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, paperId: id }),
@@ -47,7 +48,7 @@ const SavedPaperCard = ({ id, title, url, checked, onToggle }) => {
     if (!username) return;
 
     try {
-      await fetch('http://localhost:5001/api/save', {
+      await fetch(`${API_BASE_URL}/api/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
