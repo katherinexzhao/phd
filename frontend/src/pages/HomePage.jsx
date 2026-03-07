@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PaperCard from './PaperCard';
+import PaperCard from './PaperCardSearch';
+import RecommendedContent from './RecommendHomePage';
 
 function extractLink(r) {
   if (Array.isArray(r.fullTextLinks) && r.fullTextLinks.length > 0 && r.fullTextLinks[0].url) return r.fullTextLinks[0].url;
@@ -169,14 +170,22 @@ pagination.map
 export default function HomePage() {
   const username = typeof window !== 'undefined' ? localStorage.getItem('username') : '';
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col items-center pt-16 pb-16 px-4">
+    <div className="bg-gray-50 min-h-screen flex flex-col items-center pt-16 pb-20 px-4">
+      {/* 欢迎标题 */}
       <div className="max-w-2xl w-full text-center mb-8">
-        <h1 className="text-4xl font-extrabold text-gray-750 mb-2 drop-shadow">{username ? `Welcome, ${username}!` : 'Welcome!'}</h1>
+        <h1 className="text-4xl font-extrabold text-gray-800 mb-2 drop-shadow">
+          {username ? `Welcome, ${username}!` : 'Welcome!'}
+        </h1>
         <p className="text-gray-600 text-lg">Search Open Education Resources</p>
       </div>
-      <div className="w-full max-w-2xl mt-8">
+
+      {/* 搜索区 */}
+      <div className="w-full max-w-2xl mt-4">
         <CoreSearch />
+      {/* Recommended Papers and Resources */}
+      <RecommendedContent />
       </div>
+
     </div>
   );
 }

@@ -9,9 +9,12 @@ const OERSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  url: {
+  resourceUrl: {  // 🆕 实际资源文件 URL
     type: String,
     required: true
+  },
+  coverUrl: {      // 🆕 封面图片（可选）
+    type: String
   },
   tags: [{
     type: String
@@ -24,7 +27,9 @@ const OERSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  isForwarded: { type: Boolean, default: false },
+  originalSource: { type: String }, 
 });
 
-module.exports = mongoose.model('OER', OERSchema); 
+module.exports = mongoose.model('OER', OERSchema);

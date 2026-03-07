@@ -1,22 +1,28 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const ChatWindow = () => {
+
+const ChatWindow = ({ context }) => {
   const [input, setInput] = useState('');
   const [chat, setChat] = useState([]);
+
+  React.useEffect(() => {
+    console.log("🧩 Received context in ChatWindow:",  JSON.stringify(context, null, 2));
+  }, [context]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
     const userMsg = { role: 'user', content: input };
-    setChat([...chat, userMsg]);
+    setChat(prev => [...prev, userMsg]);
 
     try {
-      const res = await axios.post('/api/chat', { message: input });
+      const res = await axios.post('/api/chat', { message: input, context: context });
       const botMsg = { role: 'assistant', content: res.data.reply };
-      setChat([...chat, userMsg, botMsg]);
+      setChat(prev => [...prev, userMsg, botMsg]);
       setInput('');
-    } catch {
-      setChat([...chat, userMsg, { role: 'assistant', content: "Error contacting AI." }]);
+    } catch (error) {
+      console.error('❌ Error from /api/chat:', error.response?.data || error.message);
+      setChat(prev => [...prev, userMsg, { role: 'assistant', content: "Error contacting AI." }]);
     }
   };
 

@@ -1,8 +1,27 @@
 import React, { useState } from 'react';
 import TagPickerModal from './TagPickerModal';
+import ReactMarkdown from 'react-markdown';
+import axios from 'axios';
 
-const SavedPaperCard = ({ id, title, url }) => {
+const SavedPaperCard = ({ id, title, url, checked, onToggle }) => {
   const [openTagModal, setOpenTagModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [plan, setPlan] = useState('');
+
+  const generatePlan = async () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    setLoading(true);
+    try {
+      const res = await axios.post('http://localhost:5001/api/study-plan/from-saved', { userId });
+      setPlan(res.data.plan || '');
+    } catch (err) {
+      console.error('Failed to generate plan', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // -------- Handle Remove --------
   const handleUnsave = async () => {
@@ -45,27 +64,40 @@ const SavedPaperCard = ({ id, title, url }) => {
 
   return (
     <>
-      <div className="bg-slate-50 border border-gray-300 rounded-xl p-4 shadow-sm hover:shadow-md transition">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
-          {title}
-        </h3>
-
-        <div className="flex justify-between items-center text-sm">
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-900 hover:underline"
-          >
-            View Paper
-          </a>
-
-          <button
-            onClick={handleUnsave}
-            className="text-gray-500 hover:text-black"
-          >
-            🗑️
-          </button>
+      <div className="block w-full max-w-2xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 min-h-[140px] flex flex-col justify-between transition hover:shadow-lg">
+          <div className="flex items-start mb-2">
+            <input
+              type="checkbox"
+              className="mr-2 mt-1"
+              checked={checked}
+              onChange={() => onToggle(id)}
+            />
+            <div className="flex-1">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-lg font-semibold text-gray-900 mb-3 line-clamp-4 hover:underline"
+              >
+                {title}
+              </a>
+              <div className="flex justify-between items-end mt-6">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setOpenTagModal(true); }}
+                  className="text-gray-500 hover:text-black text-sm"
+                >
+                  Edit Tag
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleUnsave(); }}
+                  className="text-gray-500 hover:text-red-600 text-sm self-end"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -75,8 +107,22 @@ const SavedPaperCard = ({ id, title, url }) => {
         onClose={() => setOpenTagModal(false)}
         onSave={saveWithTag}
       />
+
+      {/* Removed individual card-level generate button */}
+
+      {loading && (
+        <div className="text-center mt-4 text-gray-500">Generating plan...</div>
+      )}
+
+      {plan && (
+        <div className="max-w-3xl mx-auto mt-6 p-6 bg-white rounded-lg shadow">
+          <h2 className="text-xl font-bold mb-4">Your Personalized Plan</h2>
+          <ReactMarkdown className="prose">{plan}</ReactMarkdown>
+        </div>
+      )}
     </>
   );
 };
+
 
 export default SavedPaperCard;

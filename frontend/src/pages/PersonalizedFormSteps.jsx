@@ -1,4 +1,3 @@
-// src/pages/PersonalizedFormSteps.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -38,18 +37,19 @@ const PersonalizedFormSteps = () => {
 
     // build payload for plan generation
     const payload = {
-      topic: formData.topic,
-      goal: formData.goal,
-      expertise_level: formData.level,
-      time_commitment: formData.timeCommitment,
-      learning_style: formData.learningStyle,
-      output_format: formData.outputFormat,
-      additional_preferences: formData.additionalPreferences
-    };
+  topic: formData.topic,
+  preferences: {
+    expertise_level: formData.level,
+    time_commitment: formData.timeCommitment,
+    learning_style: formData.learningStyle,
+    output_format: formData.outputFormat,
+    additional_preferences: formData.additionalPreferences
+  }
+};
 
     try {
       // generate study plan from AI service
-      const genRes = await fetch('http://localhost:8001/generate-plan/', {
+      const genRes = await fetch("http://127.0.0.1:5001/api/generate-plan/", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -57,16 +57,8 @@ const PersonalizedFormSteps = () => {
       if (!genRes.ok) throw new Error(`Plan generation failed (${genRes.status})`);
       const plan = await genRes.json();
 
-      // save plan to Neo4j
-      const saveRes = await fetch('http://localhost:5001/api/plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: localStorage.getItem('username'),
-          plan
-        })
-      });
-      if (!saveRes.ok) console.warn('Plan save request failed');
+      // navigate to display page
+      navigate('/personalized-plan', { state: { plan } });
 
       // navigate to display page
       navigate('/personalized-plan', { state: { plan } });
@@ -158,7 +150,7 @@ const PersonalizedFormSteps = () => {
 
   return (
     <div className="flex items-center justify-center bg-gray-100 min-h-screen p-6">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 w-full max-w-xl p-8">
+      <div className="bg-white rounded-xl shadow-md border border-gray-300 w-full max-w-2xl p-8 text-gray-800">
         {/* Progress Dots */}
         <div className="flex justify-between mb-8">
           {[1,2,3,4].map(step => (
@@ -180,19 +172,19 @@ const PersonalizedFormSteps = () => {
               <button
                 type="button"
                 onClick={prevStep}
-                className="px-5 py-2 bg-white border border-gray-400 text-gray-800 rounded-lg hover:bg-gray-50 transition"
+                className="px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition"
               >Previous</button>
             )}
             {currentStep < 4 ? (
               <button
                 type="button"
                 onClick={nextStep}
-                className="ml-auto px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+                className="ml-auto px-5 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition"
               >Next</button>
             ) : (
               <button
                 type="submit"
-                className="ml-auto px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition"
+                className="ml-auto px-5 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition"
               >Generate Plan</button>
             )}
           </div>

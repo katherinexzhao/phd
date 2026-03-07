@@ -33,6 +33,14 @@ const UploadOERPage = () => {
       return;
     }
     setMessage('');
+    console.log("Navigating to /upload/meta with data:", {
+      title,
+      description,
+      topic,
+      file,
+      coverFile,
+      email
+    });
     navigate('/upload/meta', {
       state: {
         title,
@@ -57,7 +65,7 @@ const UploadOERPage = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title of your post"
-            className="w-full h-12 px-4 text-xl text-black/80 border border-gray-300 rounded-lg focus:outline-gray-500 focus:text-black"
+            className="w-full h-12 px-4 text-base text-black/80 border border-gray-300 rounded-lg focus:outline-gray-500 focus:text-black"
           />
         </div>
 
@@ -69,7 +77,7 @@ const UploadOERPage = () => {
             {coverPreview ? (
               <img src={coverPreview} alt="cover preview" className="w-full h-full object-cover rounded-xl" />
             ) : (
-              <span className="text-black/50 text-lg flex items-center justify-center w-full h-full text-center">Add cover image (optional)</span>
+              <span className="text-black/50 text-base flex items-center justify-center w-full h-full text-center">Add cover image (optional)</span>
             )}
             <input
               type="file"
@@ -90,8 +98,8 @@ const UploadOERPage = () => {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Write your experience, tips, or resource description..."
-            className="w-full h-32 p-4 text-lg text-black/80 border border-gray-300 rounded-lg focus:outline-gray-500 focus:text-black resize-none"
+            placeholder="Please write an introduction/abstract for your resource description..."
+            className="w-full h-32 p-4 text-sm text-black/80 border border-gray-300 rounded-lg focus:outline-gray-500 focus:text-black resize-none"
           />
         </div>
 
@@ -104,7 +112,7 @@ const UploadOERPage = () => {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Enter your resource topic (required)"
-            className="w-full h-12 px-4 text-xl text-black/80 border border-gray-300 rounded-lg focus:outline-gray-500 focus:text-black"
+            className="w-full h-12 px-4 text-base text-black/80 border border-gray-300 rounded-lg focus:outline-gray-500 focus:text-black"
           />
         </div>
 
@@ -114,7 +122,7 @@ const UploadOERPage = () => {
           <div className="mb-3 text-sm text-gray-500">Select the file you want to upload (PDF, Word, PPT, image, etc.).</div>
           <div className="w-32 h-10 relative">
             <label className="w-full h-full flex items-center justify-center bg-white rounded-lg shadow outline outline-1 outline-black/20 cursor-pointer hover:bg-gray-50">
-              <span className="text-black text-lg">Choose File</span>
+              <span className="text-black text-sm">Choose File</span>
               <input
                 type="file"
                 onChange={(e) => setFile(e.target.files[0])}
@@ -130,7 +138,7 @@ const UploadOERPage = () => {
         {/* Next Button */}
         <button
           type="submit"
-          className="mt-10 px-8 py-3 rounded-lg text-white text-lg font-semibold bg-black hover:bg-gray-700 shadow-lg hover:shadow-xl w-full max-w-xs"
+          className="mt-10 px-8 py-3 rounded-lg text-white text-base font-semibold bg-black hover:bg-gray-700 shadow-lg hover:shadow-xl w-full max-w-xs"
         >
           Next
         </button>

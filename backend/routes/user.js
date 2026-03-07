@@ -64,4 +64,21 @@ router.get('/profile', async (req, res) => {
   res.json({ success: true, user });
 });
 
-module.exports = router; 
+// Get user interests by email
+router.get('/interests', async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ success: false, error: 'Missing email in query' });
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, error: `User not found for email: ${email}` });
+
+    console.log(`🎯 Interests for ${email}:`, user.titles || []);
+    res.json({ success: true, interests: user.titles || [] });
+  } catch (err) {
+    console.error('❌ Error retrieving user interests:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+module.exports = router;

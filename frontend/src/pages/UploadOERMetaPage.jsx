@@ -22,19 +22,33 @@ export default function UploadOERMetaPage() {
       setMessage('User not logged in. Please log in again.');
       return;
     }
-    const tags = keywords.split(',').map(t => t.trim()).filter(Boolean);
-    const data = {
-      title: location.state?.title || '',
-      description: location.state?.description || '',
-      url: 'https://example.com/resource',
-      tags,
-      uploader: userId
-    };
+
+    const formData = new FormData();
+    formData.append('title', location.state?.title || '');
+    formData.append('description', location.state?.description || '');
+    formData.append('topic', location.state?.topic || '');
+    formData.append('uploader', userId);
+    formData.append('subjects', subjects);
+    formData.append('educationLevels', educationLevels);
+    formData.append('materialTypes', materialTypes);
+    formData.append('languages', languages);
+    formData.append('mediaFormats', mediaFormats);
+    formData.append('educationalUse', educationalUse);
+    formData.append('primaryUser', primaryUser);
+    formData.append('accessibility', accessibility);
+    formData.append('tags', keywords);
+
+    if (location.state?.file) {
+      formData.append('file', location.state.file);
+    }
+    if (location.state?.coverFile) {
+      formData.append('coverFile', location.state.coverFile);
+    }
+
     try {
-      const res = await fetch('http://localhost:5001/api/oer/upload', {
+      const res = await fetch('http://localhost:5001/api/oer/upload-file', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: formData
       });
       if (res.ok) {
         setMessage('OER uploaded successfully!');
@@ -42,6 +56,7 @@ export default function UploadOERMetaPage() {
         setMessage('Upload failed');
       }
     } catch (err) {
+      console.error(err);
       setMessage('Upload error');
     }
   };

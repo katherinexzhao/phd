@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import PaperCard from './PaperCard';
+import PaperCard from '../pages/PaperCardSearch';
+console.log('✅ This is PaperCard from pages folder!');
 
 // ---------- helpers ----------
 function extractCoverUrl(paper) {
@@ -22,6 +23,8 @@ function extractCoverUrl(paper) {
 const SearchResults = () => {
   const { state } = useLocation();
   const papers = state?.results ?? [];
+
+  console.log("🔁 SearchResults loaded with papers:", papers);
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-20">

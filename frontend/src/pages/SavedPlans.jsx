@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import PlanCard from '../components/PlanCard';
+import { useNavigate } from 'react-router-dom';
 
 export default function SavedPlans() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const username = localStorage.getItem('username');
@@ -30,7 +33,7 @@ export default function SavedPlans() {
       const result = await res.json();
       console.log('✅ Deleted:', result);
 
-      // ✅ 删除后更新前端显示
+     
       setPlans(prev => prev.filter(pl => pl.planId !== planId));
       alert('✅ Plan deleted!');
     } catch (err) {
@@ -38,8 +41,7 @@ export default function SavedPlans() {
       alert('❌ Failed to delete plan.');
     }
   };
-
-  const parsedPlans = useMemo(() => plans.map(pl => {
+   const parsedPlans = useMemo(() => plans.map(pl => {
     let dataObj = pl.data || pl.content;
     if (typeof dataObj === 'string') {
       try {
@@ -51,7 +53,18 @@ export default function SavedPlans() {
     return {
       planId: pl.planId,
       study_plan: dataObj.study_plan || [],
-      updatedAt: pl.updatedAt
+      updatedAt: (() => {
+        try {
+          if (typeof pl.updatedAt === 'string') {
+            return new Date(pl.updatedAt).toISOString();
+          } else if (pl.updatedAt instanceof Date) {
+            return pl.updatedAt.toISOString();
+          }
+        } catch {
+          return '';
+        }
+        return '';
+      })(),
     };
   }), [plans]);
 
@@ -61,72 +74,15 @@ export default function SavedPlans() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">My Saved Study Plans</h1>
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {parsedPlans.map((pl, i) => (
-          <div key={pl.planId || i} className="bg-white p-4 rounded-lg shadow">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xl font-semibold">{`Plan ${i + 1}`}</h2>
-              <button
-                onClick={() => {
-                  if (confirm('Are you sure you want to delete this plan?')) {
-                    handleDeletePlan(pl.planId);
-                  }
-                }}
-                className="text-blue-500 hover:text-red-700 text-sm"
-              >
-                Delete
-              </button>
-            </div>
-
-            {pl.study_plan.map((week, wi) => (
-              <div key={wi} className="mb-3">
-                <h3 className="font-medium text-lg">{week.week}</h3>
-                {week.days.map((day, di) => (
-                  <ul key={di} className="list-disc list-inside text-sm mb-4">
-                    <li><strong>{day.day}:</strong> {day.topic || '—'}</li>
-
-                    {Array.isArray(day.keywords) && (
-                      <li><strong>Keywords:</strong> {day.keywords.join(', ')}</li>
-                    )}
-
-                    {Array.isArray(day.lesson) && (
-                      <li><strong>Lessons:</strong>
-                        <ul className="list-circle ml-6">
-                          {day.lesson.map((l, li) => (
-                            <li key={li}>{l}</li>
-                          ))}
-                        </ul>
-                      </li>
-                    )}
-
-                    {Array.isArray(day.quiz) && (
-                      <li><strong>Quiz:</strong>
-                        <ul className="list-square ml-6">
-                          {day.quiz.map((q, qi) => (
-                            <li key={qi}>{q}</li>
-                          ))}
-                        </ul>
-                      </li>
-                    )}
-
-                    {Array.isArray(day.resources) && (
-                      <li><strong>Resources:</strong>
-                        <ul className="list-decimal ml-6">
-                          {day.resources.map((r, ri) => (
-                            <li key={ri}>
-                              <a className="text-blue-600 underline" href={r.url} target="_blank" rel="noreferrer">
-                                {r.title}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </li>
-                    )}
-                  </ul>
-                ))}
-              </div>
-            ))}
-          </div>
+          <PlanCard
+            key={pl.planId || i}
+            plan={pl}
+            index={i}
+            onDelete={handleDeletePlan}
+            onClick={() => navigate('/plan-detail', { state: { plan: pl.study_plan } })}
+          />
         ))}
       </div>
     </div>

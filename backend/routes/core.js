@@ -38,6 +38,7 @@ router.get('/search', async (req, res) => {
       limit
     });
   } catch (err) {
+    console.error('[Core API Error]', err?.response?.data || err.message || err);
     res.status(500).json({ error: 'Core API search failed' });
   }
 });
