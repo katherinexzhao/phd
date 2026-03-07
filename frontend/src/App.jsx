@@ -26,7 +26,7 @@ import EditResourcePage from './pages/EditResourcePage.jsx'
 import RecommendHomePage from './pages/RecommendHomePage.jsx'
 import CommunityPage from './pages/CommunityPage.jsx'
 import PaperCard from './pages/PaperCardSearch.jsx'
-import { API_BASE_URL } from "../api";
+import { API_BASE_URL } from "./api";
 
 function InterestPageWrapper() {
   const navigate = useNavigate();
