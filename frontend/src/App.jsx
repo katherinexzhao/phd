@@ -27,6 +27,7 @@ import RecommendHomePage from './pages/RecommendHomePage.jsx'
 import CommunityPage from './pages/CommunityPage.jsx'
 import PaperCard from './pages/PaperCardSearch.jsx'
 import { API_BASE_URL } from "./api";
+import {GoogleOAuthProvider} from "@react-oauth/google";
 
 function InterestPageWrapper() {
   const navigate = useNavigate();
@@ -48,42 +49,42 @@ function InterestPageWrapper() {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/interest" element={<InterestPageWrapper />} />
+    <GoogleOAuthProvider clientId="391677112340-os318qhu7dpb5fb7asg1nd2qtesbjtr6.apps.googleusercontent.com">
+      <Router>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/interest" element={<InterestPageWrapper />} />
 
-        <Route path="/" element={<Layout />}>
-          <Route path="home" element={<HomePage />} />
-          <Route path="chatbot" element={<ChatbotPage />} />
-          <Route path="forum" element={<div className='text-2xl'>Forum Page (TODO)</div>} />
-          <Route path="profile" element={<CompleteProfilePage />} />
-          <Route path="upload" element={<UploadOERPage />} />
-          <Route path="upload/meta" element={<UploadOERMetaPage />} />
-          <Route path="personalized" element={<PersonalizedFormSteps />} />
-          <Route path="/personalized/plan" element={<PersonalizedPlan />} />
-          <Route path="paper/:id" element={<DayDetails />} />
-          <Route path="/search-results" element={<SearchResults />} />
-          <Route path="/saved" element={<SavedPage />} />
-          <Route path="saved-plans" element={<SavedPlans />} />
-          <Route path="/my-learning" element={<MyLearningDashboard />} />
-          <Route path="/my-learning/plan/:planId" element={<PlanDetailPage />} />
-          <Route path="/plan-detail" element={<PlanDetailPage />} />
-          <Route path="/groups" element={<GroupListPage />} />
-          <Route path="/groups/:groupId" element={<GroupsInfo />} />
-          <Route path="/my-resources" element={<MyResourcesPage />} />
-          <Route path="/resource/:id" element={<ResourceDetailPage />} />
-          <Route path="/resource/:resourceId/edit" element={<EditResourcePage />} />
-          <Route path="/recommend-home" element={<RecommendHomePage />} />
-          <Route path="/community" element={<CommunityPage />} />
+          <Route path="/" element={<Layout />}>
+            <Route path="home" element={<HomePage />} />
+            <Route path="chatbot" element={<ChatbotPage />} />
+            <Route path="forum" element={<div className='text-2xl'>Forum Page (TODO)</div>} />
+            <Route path="profile" element={<CompleteProfilePage />} />
+            <Route path="upload" element={<UploadOERPage />} />
+            <Route path="upload/meta" element={<UploadOERMetaPage />} />
+            <Route path="personalized" element={<PersonalizedFormSteps />} />
+            <Route path="/personalized/plan" element={<PersonalizedPlan />} />
+            <Route path="paper/:id" element={<DayDetails />} />
+            <Route path="/search-results" element={<SearchResults />} />
+            <Route path="/saved" element={<SavedPage />} />
+            <Route path="saved-plans" element={<SavedPlans />} />
+            <Route path="/my-learning" element={<MyLearningDashboard />} />
+            <Route path="/my-learning/plan/:planId" element={<PlanDetailPage/>} />
+            <Route path="/plan-detail" element={<PlanDetailPage />} />
+            <Route path="/groups" element={<GroupListPage />} />
+            <Route path="/groups/:groupId" element={<GroupsInfo />} />
+            <Route path="/my-resources" element={<MyResourcesPage />} />
+            <Route path="/resource/:id" element={<ResourceDetailPage />} />
+            <Route path="/resource/:resourceId/edit" element={<EditResourcePage />} />
+            <Route path="/recommend-home" element={<RecommendHomePage />} />
+            <Route path="/community" element={<CommunityPage />} />
+          </Route>
 
-        </Route>
-
-        {/* Ensure the personalized-plan route is outside of Layout to avoid sidebar */}
-        <Route path="/personalized-plan" element={<PersonalizedPlan />} />
-      </Routes>
-    </Router>
+          <Route path="/personalized-plan" element={<PersonalizedPlan />} />
+        </Routes>
+      </Router>
+    </GoogleOAuthProvider>
   )
 }
 

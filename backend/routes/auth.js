@@ -4,6 +4,10 @@ const User = require('../models/User')
 const router = express.Router()
 const multer = require('multer');
 const path = require('path');
+const { OAuth2Client } = require('google-auth-library');
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '391677112340-os318qhu7dpb5fb7asg1nd2qtesbjtr6.apps.googleusercontent.com';
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 const neo4j = require('../config/neo4j');
 
 const storage = multer.diskStorage({
@@ -20,10 +24,15 @@ const upload = multer({ storage: storage });
 // Sign up
 router.post('/signup', upload.single('avatar'), async (req, res) => {
   try {
-    const { email, password, username, bio } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const { password, username, bio } = req.body;
     let titles = req.body.titles;
     if (titles && !Array.isArray(titles)) {
       titles = [titles];
+    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, error: 'Email already exists' });
     }
     let avatarUrl = req.file ? `/uploads/avatars/${req.file.filename}` : '';
     const user = new User({
@@ -52,7 +61,8 @@ router.post('/signup', upload.single('avatar'), async (req, res) => {
 
 // Log in
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body
+  const email = normalizeEmail(req.body.email)
+  const password = req.body.password
   const user = await User.findOne({ email })
   if (!user) return res.status(400).json({ success: false, error: 'Invalid credentials' })
   const isMatch = await user.comparePassword(password)
@@ -68,5 +78,68 @@ router.post('/login', async (req, res) => {
   );
   res.json({ success: true, message: 'Login successful', username: user.username, userId: user._id })
 })
+
+// Google Login
+router.post('/google-login', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        error: 'Google token is required'
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const email = normalizeEmail(payload.email);
+    const username = payload.name || payload.given_name || 'Google User';
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Google account email not found'
+      });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({
+        email,
+        username,
+        googleUser: true
+      });
+    }
+
+    await neo4j.session().run(
+      `MERGE (u:User {id: $userId})
+       SET u.username = $username, u.email = $email`,
+      {
+        userId: user._id.toString(),
+        username: user.username,
+        email: user.email
+      }
+    );
+
+    return res.json({
+      success: true,
+      email: user.email,
+      username: user.username,
+      userId: user._id
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Google sign up failed. Please try again.'
+    });
+  }
+});
 
 module.exports = router

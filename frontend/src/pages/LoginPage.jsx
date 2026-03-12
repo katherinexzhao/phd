@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from "../api";
+import { GoogleLogin } from '@react-oauth/google';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -76,7 +77,38 @@ const LoginPage = () => {
             className="w-[464px] h-16 bg-black text-white rounded-[5px] text-2xl font-semibold font-poppins mb-8"
           >
             Continue
+            
           </button>
+          <div className="w-[464px] flex justify-center mb-8">
+            <GoogleLogin
+              clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+              onSuccess={async (credentialResponse) => {
+                try {
+                  const res = await fetch(`${API_BASE_URL}/api/auth/google-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: credentialResponse?.credential })
+                  });
+
+                  const data = await res.json();
+
+                  if (data.success) {
+                    localStorage.setItem('email', data.email);
+                    if (data.username) localStorage.setItem('username', data.username);
+                    if (data.userId) localStorage.setItem('userId', data.userId);
+                    navigate('/home');
+                  } else {
+                    setError(data.error || 'Google login failed');
+                  }
+                } catch (err) {
+                  setError('Google login network error');
+                }
+              }}
+              onError={() => {
+                setError('Google login failed');
+              }}
+            />
+          </div>
           {error && (
             <div className="w-[464px] text-red-500 text-base text-center mb-4">{error}</div>
           )}
