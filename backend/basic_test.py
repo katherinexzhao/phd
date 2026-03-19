@@ -4,7 +4,7 @@ load_dotenv()
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 
-# 替换为你自己的 OpenAI API key
+
 api_key = os.getenv("OPENAI_API_KEY")
 llm = ChatOpenAI(api_key=api_key, temperature=0)
 

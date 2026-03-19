@@ -25,9 +25,14 @@ import ResourceDetailPage from './pages/ResourceDetailPage.jsx'
 import EditResourcePage from './pages/EditResourcePage.jsx'
 import RecommendHomePage from './pages/RecommendHomePage.jsx'
 import CommunityPage from './pages/CommunityPage.jsx'
+import ModeSelectionPage from './pages/ModeSelectionPage.jsx'
+import ResearchHomePage from './pages/ResearchHomePage.jsx';
 import PaperCard from './pages/PaperCardSearch.jsx'
 import { API_BASE_URL } from "./api";
 import {GoogleOAuthProvider} from "@react-oauth/google";
+import SavedPapersByTopicPage from "./pages/SavedPapersByTopicPage";
+import ExplainPaperPage from "./pages/ExplainPaperPage";
+import LearningTopicDashboardPage from "./pages/LearningTopicDashboardPage";
 
 function InterestPageWrapper() {
   const navigate = useNavigate();
@@ -55,6 +60,11 @@ function App() {
           <Route path="/" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/interest" element={<InterestPageWrapper />} />
+          <Route path="/select-mode" element={<ModeSelectionPage />} />
+          <Route path="/research" element={<ResearchHomePage />} />
+          <Route path="/saved-papers-by-topic" element={<SavedPapersByTopicPage />} />
+          <Route path="/explain-paper" element={<ExplainPaperPage />} />
+          <Route path="/learning-topics" element={<LearningTopicDashboardPage />} />
 
           <Route path="/" element={<Layout />}>
             <Route path="home" element={<HomePage />} />
@@ -79,6 +89,8 @@ function App() {
             <Route path="/resource/:resourceId/edit" element={<EditResourcePage />} />
             <Route path="/recommend-home" element={<RecommendHomePage />} />
             <Route path="/community" element={<CommunityPage />} />
+            
+            
           </Route>
 
           <Route path="/personalized-plan" element={<PersonalizedPlan />} />

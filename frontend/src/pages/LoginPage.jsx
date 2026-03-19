@@ -1,129 +1,209 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import { Sparkles, LogIn } from "lucide-react";
 import { API_BASE_URL } from "../api";
-import { GoogleLogin } from '@react-oauth/google';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  // Handle login form submission
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
+
     if (!email || !password) {
-      setError('Please enter email and password');
+      setError("Please enter email and password");
       return;
     }
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await res.json();
+
       if (res.ok && data.success) {
-        localStorage.setItem('email', email);
+        localStorage.setItem("email", email);
         if (data.username) {
-          localStorage.setItem('username', data.username);
+          localStorage.setItem("username", data.username);
         }
         if (data.userId) {
-          localStorage.setItem('userId', data.userId);
+          localStorage.setItem("userId", data.userId);
         }
-        navigate('/home');
+        navigate("/research");
       } else {
-        setError(data.error || 'Login failed');
+        setError(data.error || "Login failed");
       }
     } catch (err) {
-      setError('Network error');
+      setError("Network error");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-[687px] h-[863px] relative bg-white overflow-hidden rounded-2xl shadow-lg flex flex-col items-center">
-        <h2 className="w-36 h-20 mt-[80px] mb-[40px] text-center text-stone-500 text-4xl font-bold font-mukta leading-10">Welcome</h2>
-        <form className="flex flex-col items-center w-full" onSubmit={handleLogin}>
-          <input
-            type="email"
-            placeholder="Email address"
-            className="w-[464px] h-14 mb-6 rounded-[5px] border border-black px-4 py-3 text-xl font-poppins"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            autoComplete="username"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-[464px] h-14 mb-6 rounded-[5px] border border-black px-4 py-3 text-xl font-poppins"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            autoComplete="current-password"
-          />
-          <div className="w-[464px] flex justify-end mb-6">
-            <button
-              type="button"
-              className="text-blue-800 font-semibold text-base font-poppins underline"
-              onClick={() => navigate('/forgot-password')}
-              tabIndex={-1}
-            >
-              Forgot Password?
-            </button>
-          </div>
-          <button
-            type="submit"
-            className="w-[464px] h-16 bg-black text-white rounded-[5px] text-2xl font-semibold font-poppins mb-8"
-          >
-            Continue
-            
-          </button>
-          <div className="w-[464px] flex justify-center mb-8">
-            <GoogleLogin
-              clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
-              onSuccess={async (credentialResponse) => {
-                try {
-                  const res = await fetch(`${API_BASE_URL}/api/auth/google-login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: credentialResponse?.credential })
-                  });
+    <div className="min-h-screen bg-slate-50 px-4 py-6 md:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="px-6 py-8 md:px-8 lg:px-10">
+              <div className="flex items-center gap-2 text-slate-600">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-[0.24em]">
+                  Welcome Back
+                </span>
+              </div>
 
-                  const data = await res.json();
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-5xl">
+                Sign in to LEAP
+              </h1>
 
-                  if (data.success) {
-                    localStorage.setItem('email', data.email);
-                    if (data.username) localStorage.setItem('username', data.username);
-                    if (data.userId) localStorage.setItem('userId', data.userId);
-                    navigate('/home');
-                  } else {
-                    setError(data.error || 'Google login failed');
-                  }
-                } catch (err) {
-                  setError('Google login network error');
-                }
-              }}
-              onError={() => {
-                setError('Google login failed');
-              }}
-            />
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
+                Continue exploring papers, organizing saved topics, and building your lifelong learning path.
+              </p>
+
+              <form className="mt-8 space-y-5" onSubmit={handleLogin}>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-violet-300 focus:bg-white"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="username"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-slate-700">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      className="text-sm font-medium text-violet-700 transition hover:text-violet-800"
+                      onClick={() => navigate("/forgot-password")}
+                      tabIndex={-1}
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-violet-300 focus:bg-white"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                  />
+                </div>
+
+                {error ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {error}
+                  </div>
+                ) : null}
+
+                <div className="space-y-4 pt-2">
+                  <button
+                    type="submit"
+                    className="w-full rounded-2xl bg-violet-600 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-violet-700"
+                  >
+                    Continue
+                  </button>
+
+                  <div className="flex justify-center">
+                    <GoogleLogin
+                      clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+                      onSuccess={async (credentialResponse) => {
+                        try {
+                          const res = await fetch(`${API_BASE_URL}/api/auth/google-login`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ token: credentialResponse?.credential }),
+                          });
+
+                          const data = await res.json();
+
+                          if (data.success) {
+                            localStorage.setItem("email", data.email);
+                            if (data.username) localStorage.setItem("username", data.username);
+                            if (data.userId) localStorage.setItem("userId", data.userId);
+                            navigate("/research");
+                          } else {
+                            setError(data.error || "Google login failed");
+                          }
+                        } catch (err) {
+                          setError("Google login network error");
+                        }
+                      }}
+                      onError={() => {
+                        setError("Google login failed");
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-slate-200 pt-5">
+                  <span className="text-sm text-slate-600">
+                    Don&apos;t have an account yet?
+                  </span>
+                  <button
+                    type="button"
+                    className="text-sm font-semibold text-violet-700 transition hover:text-violet-800"
+                    onClick={() => navigate("/signup")}
+                    tabIndex={-1}
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div className="border-t border-slate-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 px-6 py-8 md:px-8 lg:border-l lg:border-t-0 lg:px-10">
+              <div className="rounded-[24px] border border-violet-100 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-sm">
+                  <LogIn className="h-5 w-5" />
+                </div>
+
+                <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-violet-600">
+                  Continue Your Journey
+                </p>
+
+                <h2 className="mt-3 text-2xl font-semibold text-slate-900">
+                  Return to your research workspace
+                </h2>
+
+                <p className="mt-4 text-sm leading-6 text-slate-600">
+                  Access your saved papers, topic labels, search tools, and AI-assisted learning workflow in one place.
+                </p>
+
+                <div className="mt-6 space-y-3">
+                  {[
+                    "Resume paper exploration",
+                    "Review saved topic groups",
+                    "Use AI-assisted paper guidance",
+                    "Build lifelong learning plans",
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      className="rounded-2xl border border-white bg-white px-4 py-3 text-sm text-slate-700 shadow-sm"
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-          {error && (
-            <div className="w-[464px] text-red-500 text-base text-center mb-4">{error}</div>
-          )}
-          <div className="w-[464px] flex justify-between items-center">
-            <span className="text-base font-semibold font-poppins">Don't have an account yet?</span>
-            <button
-              type="button"
-              className="text-blue-800 font-semibold text-base font-poppins underline"
-              onClick={() => navigate('/signup')}
-              tabIndex={-1}
-            >
-              Sign Up
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

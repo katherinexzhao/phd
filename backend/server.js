@@ -48,6 +48,7 @@ app.use('/api/groups', require('./routes/group'));
 app.use('/api/study-plan', studyPlanRoutes);
 app.use('/api/recommend', require('./routes/recommend'));
 app.use('/api/comment', commentRoutes);
+app.use('/api/research', require('./routes/research')); 
 
 app.use('/audio', express.static(path.join(__dirname, '../frontend/public/audio')));
 const PORT = process.env.PORT || 5001
