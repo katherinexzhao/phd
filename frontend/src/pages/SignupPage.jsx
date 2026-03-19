@@ -230,7 +230,6 @@ function SignupPage() {
 
                   <div className="flex justify-center">
                     <GoogleLogin
-                      clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
                       text="signup_with"
                       onSuccess={async (credentialResponse) => {
                         setError("");

@@ -121,7 +121,6 @@ const LoginPage = () => {
 
                   <div className="flex justify-center">
                     <GoogleLogin
-                      clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
                       onSuccess={async (credentialResponse) => {
                         try {
                           const res = await fetch(`${API_BASE_URL}/api/auth/google-login`, {

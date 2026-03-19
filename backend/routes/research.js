@@ -27,6 +27,40 @@ function normalizePaperType(value) {
   return "Other";
 }
 
+function hasNeo4jConfig() {
+  return Boolean(
+    process.env.NEO4J_URI &&
+      process.env.NEO4J_USER &&
+      process.env.NEO4J_PASSWORD
+  );
+}
+
+function createNeo4jSession() {
+  if (!hasNeo4jConfig()) {
+    return null;
+  }
+
+  return driver.session();
+}
+
+function isNeo4jUnavailableError(error) {
+  const message = String(error?.message || "");
+
+  return (
+    error?.name === "ServiceUnavailable" ||
+    error?.code === "ServiceUnavailable" ||
+    /ECONNREFUSED|ENOTFOUND|No routing servers|Unable to retrieve routing information|Could not perform discovery|Connection acquisition timed out|Failed to connect|database is unavailable/i.test(
+      message
+    )
+  );
+}
+
+async function safeCloseSession(session) {
+  if (session) {
+    await session.close();
+  }
+}
+
 function getOpenAIClient() {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not configured");
@@ -192,39 +226,52 @@ Return JSON in this format:
   }
 });
   router.post("/explain-paper", async (req, res) => {
-    const session = driver.session();
+    let session = null;
   try {
     const { paperId, title, summary, paperText = "", authors = [], primaryCategory = "" } = req.body;
 
     if (!paperId ||!title || !summary) {
       return res.status(400).json({ error: "Missing paper Id, title or summary" });
     }
-    
-    const existingResult = await session.run(
 
-    `
-      MATCH (p:Paper {paperId: $paperId})
-      RETURN
-        p.simple_explanation AS simple_explanation,
-        p.why_it_matters AS why_it_matters,
-        p.paperType AS paperType
-      `,
-      { paperId }
-    );
+    session = createNeo4jSession();
 
-    if (existingResult.records.length > 0) {
-      const record = existingResult.records[0];
-      const simpleExplanation = record.get("simple_explanation");
-      const whyItMatters = record.get("why_it_matters");
-      const paperType = record.get("paperType");
+    if (session) {
+      try {
+        const existingResult = await session.run(
+          `
+            MATCH (p:Paper {paperId: $paperId})
+            RETURN
+              p.simple_explanation AS simple_explanation,
+              p.why_it_matters AS why_it_matters,
+              p.paperType AS paperType
+          `,
+          { paperId }
+        );
 
-      if (simpleExplanation && whyItMatters && paperType) {
-        return res.json({
-          simple_explanation: simpleExplanation,
-          why_it_matters: whyItMatters,
-          paperType: paperType,
-          cached: true,
-        });
+        if (existingResult.records.length > 0) {
+          const record = existingResult.records[0];
+          const simpleExplanation = record.get("simple_explanation");
+          const whyItMatters = record.get("why_it_matters");
+          const paperType = record.get("paperType");
+
+          if (simpleExplanation && whyItMatters && paperType) {
+            return res.json({
+              simple_explanation: simpleExplanation,
+              why_it_matters: whyItMatters,
+              paperType: paperType,
+              cached: true,
+            });
+          }
+        }
+      } catch (error) {
+        if (isNeo4jUnavailableError(error)) {
+          console.error("explain-paper cache read skipped:", error.message);
+          await safeCloseSession(session);
+          session = null;
+        } else {
+          throw error;
+        }
       }
     }
 
@@ -278,28 +325,38 @@ Return JSON only in this format:
     const paperType = normalizePaperType(parsed.paperType);
 
     // 3. 把生成结果写回数据库
-    await session.run(
-      `
-      MERGE (p:Paper {paperId: $paperId})
-      SET p.title = $title,
-          p.summary = $summary,
-          p.authors = $authors,
-          p.primaryCategory = $primaryCategory,
-          p.simple_explanation = $simpleExplanation,
-          p.why_it_matters = $whyItMatters,
-          p.paperType = $paperType
-      `,
-      {
-        paperId,
-        title,
-        summary,
-        authors,
-        primaryCategory,
-        simpleExplanation,
-        whyItMatters,
-        paperType,
+    if (session) {
+      try {
+        await session.run(
+          `
+          MERGE (p:Paper {paperId: $paperId})
+          SET p.title = $title,
+              p.summary = $summary,
+              p.authors = $authors,
+              p.primaryCategory = $primaryCategory,
+              p.simple_explanation = $simpleExplanation,
+              p.why_it_matters = $whyItMatters,
+              p.paperType = $paperType
+          `,
+          {
+            paperId,
+            title,
+            summary,
+            authors,
+            primaryCategory,
+            simpleExplanation,
+            whyItMatters,
+            paperType,
+          }
+        );
+      } catch (error) {
+        if (isNeo4jUnavailableError(error)) {
+          console.error("explain-paper cache write skipped:", error.message);
+        } else {
+          throw error;
+        }
       }
-    );
+    }
 
     return res.json({
       simple_explanation: simpleExplanation,
@@ -309,14 +366,15 @@ Return JSON only in this format:
     });
   } catch (error) {
     console.error("explain-paper error:", error);
-    return res.status(500).json({ error: "Failed to explain paper" });
+    const status = /OPENAI_API_KEY is not configured/i.test(error.message) ? 503 : 500;
+    return res.status(status).json({ error: "Failed to explain paper" });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
 
   router.post("/save-paper", async (req, res) => {
-  const session = driver.session();
+  const session = createNeo4jSession();
 
   try {
     const { email, topicLabel, paper } = req.body;
@@ -324,6 +382,12 @@ Return JSON only in this format:
     if (!email || !topicLabel || !paper?.paperId) {
       return res.status(400).json({
         error: "Missing required fields",
+      });
+    }
+
+    if (!session) {
+      return res.status(503).json({
+        error: "Research database is not configured",
       });
     }
 
@@ -368,21 +432,30 @@ Return JSON only in this format:
     return res.json({ success: true });
   } catch (error) {
     console.error("save-paper error:", error);
+    if (isNeo4jUnavailableError(error)) {
+      return res.status(503).json({
+        error: "Research database is temporarily unavailable",
+      });
+    }
     return res.status(500).json({
       error: "Failed to save paper",
     });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
   router.get("/paper-save-status", async (req, res) => {
-  const session = driver.session();
+  const session = createNeo4jSession();
 
   try {
     const { email, paperId } = req.query;
 
     if (!email || !paperId) {
       return res.status(400).json({ error: "Missing email or paperId" });
+    }
+
+    if (!session) {
+      return res.json({ isSaved: false, degraded: true });
     }
 
     const result = await session.run(
@@ -396,20 +469,27 @@ Return JSON only in this format:
     return res.json({ isSaved: result.records.length > 0 });
   } catch (error) {
     console.error("paper-save-status error:", error);
+    if (isNeo4jUnavailableError(error)) {
+      return res.json({ isSaved: false, degraded: true });
+    }
     return res.status(500).json({ error: "Failed to check paper save status" });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
 
 router.get("/topic-tags", async (req, res) => {
-  const session = driver.session();
+  const session = createNeo4jSession();
 
   try {
     const { email } = req.query;
 
     if (!email) {
       return res.status(400).json({ error: "Missing email" });
+    }
+
+    if (!session) {
+      return res.json({ tags: [], degraded: true });
     }
 
     const result = await session.run(
@@ -428,19 +508,26 @@ router.get("/topic-tags", async (req, res) => {
     return res.json({ tags });
   } catch (error) {
     console.error("topic-tags error:", error);
+    if (isNeo4jUnavailableError(error)) {
+      return res.json({ tags: [], degraded: true });
+    }
     return res.status(500).json({ error: "Failed to fetch topic tags" });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
    router.get("/saved-papers-by-topic", async (req, res) => {
-  const session = driver.session();
+  const session = createNeo4jSession();
 
   try {
     const { email } = req.query;
 
     if (!email) {
       return res.status(400).json({ error: "Missing email" });
+    }
+
+    if (!session) {
+      return res.json([]);
     }
 
     const result = await session.run(
@@ -487,20 +574,27 @@ router.get("/topic-tags", async (req, res) => {
     return res.json(response);
   } catch (error) {
     console.error("saved-papers-by-topic error:", error);
+    if (isNeo4jUnavailableError(error)) {
+      return res.json([]);
+    }
     return res.status(500).json({ error: "Failed to fetch saved papers" });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
   
   router.put("/update-paper-tag", async (req, res) => {
-  const session = driver.session();
+  const session = createNeo4jSession();
 
   try {
     const { email, paperId, oldTag, newTag } = req.body;
 
     if (!email || !paperId || !oldTag || !newTag) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (!session) {
+      return res.status(503).json({ error: "Research database is not configured" });
     }
 
     await session.run(
@@ -518,14 +612,17 @@ router.get("/topic-tags", async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.error("update-paper-tag error:", error);
+    if (isNeo4jUnavailableError(error)) {
+      return res.status(503).json({ error: "Research database is temporarily unavailable" });
+    }
     return res.status(500).json({ error: "Failed to update tag" });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
 
 router.put("/rename-topic", async (req, res) => {
-  const session = driver.session();
+  const session = createNeo4jSession();
 
   try {
     const { email, oldTopic, newTopic } = req.body;
@@ -534,6 +631,10 @@ router.put("/rename-topic", async (req, res) => {
 
     if (!email || !normalizedOldTopic || !normalizedNewTopic) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (!session) {
+      return res.status(503).json({ error: "Research database is not configured" });
     }
 
     if (normalizedOldTopic === normalizedNewTopic) {
@@ -571,14 +672,17 @@ router.put("/rename-topic", async (req, res) => {
     });
   } catch (error) {
     console.error("rename-topic error:", error);
+    if (isNeo4jUnavailableError(error)) {
+      return res.status(503).json({ error: "Research database is temporarily unavailable" });
+    }
     return res.status(500).json({ error: "Failed to rename topic" });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
 
 router.delete("/delete-topic", async (req, res) => {
-  const session = driver.session();
+  const session = createNeo4jSession();
 
   try {
     const { email, topic } = req.query;
@@ -586,6 +690,10 @@ router.delete("/delete-topic", async (req, res) => {
 
     if (!email || !normalizedTopic) {
       return res.status(400).json({ error: "Missing email or topic" });
+    }
+
+    if (!session) {
+      return res.status(503).json({ error: "Research database is not configured" });
     }
 
     const result = await session.run(
@@ -615,20 +723,27 @@ router.delete("/delete-topic", async (req, res) => {
     });
   } catch (error) {
     console.error("delete-topic error:", error);
+    if (isNeo4jUnavailableError(error)) {
+      return res.status(503).json({ error: "Research database is temporarily unavailable" });
+    }
     return res.status(500).json({ error: "Failed to delete topic" });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
 
   router.delete("/remove-saved-paper", async (req, res) => {
-  const session = driver.session();
+  const session = createNeo4jSession();
 
   try {
     const { email, paperId } = req.query;
 
     if (!email || !paperId) {
       return res.status(400).json({ error: "Missing email or paperId" });
+    }
+
+    if (!session) {
+      return res.status(503).json({ error: "Research database is not configured" });
     }
 
     await session.run(
@@ -642,9 +757,12 @@ router.delete("/delete-topic", async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.error("remove-saved-paper error:", error);
+    if (isNeo4jUnavailableError(error)) {
+      return res.status(503).json({ error: "Research database is temporarily unavailable" });
+    }
     return res.status(500).json({ error: "Failed to remove saved paper" });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
 
@@ -750,7 +868,7 @@ router.get("/paper-fulltext", async (req, res) => {
   }
 });
   router.post("/explain-paper-question", async (req, res) => {
-    const session = driver.session();
+    let session = null;
   try {
     const {
       paperId,
@@ -763,60 +881,74 @@ router.get("/paper-fulltext", async (req, res) => {
       questionText,
     } = req.body;
 
-    if (!paperId || !title || (!summary && !paperText) || !questionKey || !questionText) {
+if (!paperId || !title || (!summary && !paperText) || !questionKey || !questionText) {
   return res.status(400).json({
     error: "Missing paper data or analysis question",
   });
 }
 
-const existingResult = await session.run(
-      `
-      MATCH (p:Paper {paperId: $paperId})
-      RETURN
-        p[$answerKey] AS answer,
-        p[$referencesKey] AS referencesJson,
-        p[$annotationLabelKey] AS annotationLabel,
-        p[$annotationNoteKey] AS annotationNote,
-        p[$locationHintKey] AS locationHint
-      `,
-      {
-        paperId,
-        answerKey: `q_${questionKey}_answer`,
-        referencesKey: `q_${questionKey}_references`,
-        annotationLabelKey: `q_${questionKey}_annotation_label`,
-        annotationNoteKey: `q_${questionKey}_annotation_note`,
-        locationHintKey: `q_${questionKey}_location_hint`,
-      }
-    );
+    session = createNeo4jSession();
 
-    if (existingResult.records.length > 0) {
-      const record = existingResult.records[0];
-      const cachedAnswer = record.get("answer");
-      const cachedReferences = record.get("referencesJson");
-      const cachedAnnotationLabel = record.get("annotationLabel");
-      const cachedAnnotationNote = record.get("annotationNote");
-      const cachedLocationHint = record.get("locationHint");
+    if (session) {
+      try {
+        const existingResult = await session.run(
+          `
+          MATCH (p:Paper {paperId: $paperId})
+          RETURN
+            p[$answerKey] AS answer,
+            p[$referencesKey] AS referencesJson,
+            p[$annotationLabelKey] AS annotationLabel,
+            p[$annotationNoteKey] AS annotationNote,
+            p[$locationHintKey] AS locationHint
+          `,
+          {
+            paperId,
+            answerKey: `q_${questionKey}_answer`,
+            referencesKey: `q_${questionKey}_references`,
+            annotationLabelKey: `q_${questionKey}_annotation_label`,
+            annotationNoteKey: `q_${questionKey}_annotation_note`,
+            locationHintKey: `q_${questionKey}_location_hint`,
+          }
+        );
 
-      if (cachedAnswer) {
-        let parsedReferences = [];
-        try {
-          parsedReferences = cachedReferences ? JSON.parse(cachedReferences) : [];
-        } catch (e) {
-          parsedReferences = [];
+        if (existingResult.records.length > 0) {
+          const record = existingResult.records[0];
+          const cachedAnswer = record.get("answer");
+          const cachedReferences = record.get("referencesJson");
+          const cachedAnnotationLabel = record.get("annotationLabel");
+          const cachedAnnotationNote = record.get("annotationNote");
+          const cachedLocationHint = record.get("locationHint");
+
+          if (cachedAnswer) {
+            let parsedReferences = [];
+            try {
+              parsedReferences = cachedReferences ? JSON.parse(cachedReferences) : [];
+            } catch (e) {
+              parsedReferences = [];
+            }
+
+            return res.json({
+              answer: cachedAnswer,
+              references: parsedReferences,
+              annotation: {
+                label: cachedAnnotationLabel || questionText,
+                note:
+                  cachedAnnotationNote ||
+                  "Review the most relevant section of the PDF for this question.",
+                location_hint: cachedLocationHint || "Introduction",
+              },
+              cached: true,
+            });
+          }
         }
-
-        return res.json({
-          answer: cachedAnswer,
-          references: parsedReferences,
-          annotation: {
-            label: cachedAnnotationLabel || questionText,
-            note:
-              cachedAnnotationNote ||
-              "Review the most relevant section of the PDF for this question.",
-            location_hint: cachedLocationHint || "Introduction",
-          },
-          cached: true,
-        });
+      } catch (error) {
+        if (isNeo4jUnavailableError(error)) {
+          console.error("explain-paper-question cache read skipped:", error.message);
+          await safeCloseSession(session);
+          session = null;
+        } else {
+          throw error;
+        }
       }
     }
     
@@ -906,11 +1038,12 @@ Rules:
 
   } catch (error) {
     console.error("explain-paper-question error:", error);
-    return res.status(500).json({
+    const status = /OPENAI_API_KEY is not configured/i.test(error.message) ? 503 : 500;
+    return res.status(status).json({
       error: "Failed to answer analysis question",
     });
   } finally {
-    await session.close();
+    await safeCloseSession(session);
   }
 });
 

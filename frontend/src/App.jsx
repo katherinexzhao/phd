@@ -54,7 +54,7 @@ function InterestPageWrapper() {
 
 function App() {
   return (
-    <GoogleOAuthProvider clientId="391677112340-os318qhu7dpb5fb7asg1nd2qtesbjtr6.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "391677112340-os318qhu7dpb5fb7asg1nd2qtesbjtr6.apps.googleusercontent.com"}>
       <Router>
         <Routes>
           <Route path="/" element={<LoginPage />} />
