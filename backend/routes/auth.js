@@ -10,6 +10,26 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 const neo4j = require('../config/neo4j');
 
+async function syncUserToNeo4j(user) {
+  const session = neo4j.session();
+
+  try {
+    await session.run(
+      `MERGE (u:User {id: $userId})
+       SET u.username = $username, u.email = $email`,
+      {
+        userId: user._id.toString(),
+        username: user.username,
+        email: user.email
+      }
+    );
+  } catch (error) {
+    console.error('Neo4j user sync failed:', error.message);
+  } finally {
+    await session.close();
+  }
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/avatars/');
@@ -44,15 +64,7 @@ router.post('/signup', upload.single('avatar'), async (req, res) => {
       titles
     });
     await user.save();
-    await neo4j.session().run(
-      `MERGE (u:User {id: $userId})
-       SET u.username = $username, u.email = $email`,
-      {
-        userId: user._id.toString(),
-        username: user.username,
-        email: user.email
-      }
-    );
+    await syncUserToNeo4j(user);
     res.status(201).json({ success: true, message: 'User created', userId: user._id });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
@@ -67,15 +79,7 @@ router.post('/login', async (req, res) => {
   if (!user) return res.status(400).json({ success: false, error: 'Invalid credentials' })
   const isMatch = await user.comparePassword(password)
   if (!isMatch) return res.status(400).json({ success: false, error: 'Invalid credentials' })
-  await neo4j.session().run(
-    `MERGE (u:User {id: $userId})
-     SET u.username = $username, u.email = $email`,
-    {
-      userId: user._id.toString(),
-      username: user.username,
-      email: user.email
-    }
-  );
+  await syncUserToNeo4j(user);
   res.json({ success: true, message: 'Login successful', username: user.username, userId: user._id })
 })
 
@@ -117,15 +121,7 @@ router.post('/google-login', async (req, res) => {
       });
     }
 
-    await neo4j.session().run(
-      `MERGE (u:User {id: $userId})
-       SET u.username = $username, u.email = $email`,
-      {
-        userId: user._id.toString(),
-        username: user.username,
-        email: user.email
-      }
-    );
+    await syncUserToNeo4j(user);
 
     return res.json({
       success: true,
@@ -134,7 +130,7 @@ router.post('/google-login', async (req, res) => {
       userId: user._id
     });
   } catch (error) {
-    console.error('Google login error:', error);
+    console.error('Google login error:', error.message);
     return res.status(500).json({
       success: false,
       error: 'Google sign up failed. Please try again.'
