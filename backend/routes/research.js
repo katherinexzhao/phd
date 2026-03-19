@@ -3,11 +3,8 @@ const axios = require("axios");
 const { XMLParser } = require("fast-xml-parser");
 const OpenAI = require("openai");
 const router = express.Router();
-const driver = require("../neo4j");
+const driver = require("../config/neo4j");
 const pdfParse = require("pdf-parse");
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 const ALLOWED_PAPER_TYPES = new Set([
   "Survey",
@@ -28,6 +25,16 @@ function normalizePaperType(value) {
   if (normalized === "theory") return "Theory";
   if (normalized === "other") return "Other";
   return "Other";
+}
+
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 }
 
 router.get("/arxiv-search", async (req, res) => {
@@ -145,7 +152,7 @@ Return JSON in this format:
 }
 `;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAIClient().chat.completions.create({
       model: "gpt-4.1-mini",
       messages: [
         {
@@ -238,7 +245,7 @@ Return JSON only in this format:
 }
 `;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAIClient().chat.completions.create({
       model: "gpt-4.1-mini",
       messages: [
         {
@@ -856,7 +863,7 @@ Rules:
 - Do not include markdown.
 `;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAIClient().chat.completions.create({
       model: "gpt-4.1-mini",
       messages: [
         {

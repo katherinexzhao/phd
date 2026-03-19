@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const User = require('./models/User');
-const neo4j = require('./neo4j');
+const neo4j = require('./config/neo4j');
 
 const MONGO_URI = "mongodb+srv://734691yzq:zyang040123@5902.ikeftwf.mongodb.net/?retryWrites=true&w=majority&appName=5902";
 

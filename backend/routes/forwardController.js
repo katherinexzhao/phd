@@ -1,6 +1,6 @@
 // forwardController.js
 const { Post } = require('../models/Post'); // MongoDB Mongoose model
-const neo4jDriver = require('../neo4j');
+const neo4jDriver = require('../config/neo4j');
 
 async function handleForwardPost(req, res) {
   const {
